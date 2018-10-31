@@ -71,7 +71,10 @@ namespace play
 			static bool ure;
 			//use tcp or websocket for connection
 			static bool utc;
+			//peer name
+			static const char* ahrrn;
 		};
+
 		const char* config::ssoiau =
 			"http://176.221.69.209:1036/pages/iap/buy/default.aspx";
 		bool        config::harfs = false;
@@ -79,6 +82,20 @@ namespace play
 		bool        config::ure = false;
 		//use tcp or websocket connection
 		bool        config::utc = true;
+		//peer name
+		const char*	config::ahrrn = "bp.gc.sandbox";
+
+		struct url_data
+		{
+			const char* _uri;
+		};
+
+		struct request_urls
+		{
+			static url_data game_info;
+		};
+
+		url_data request_urls::game_info = url_data{ "/srv/game/get" };
 
 		struct JSONObject
 		{
@@ -111,7 +128,7 @@ namespace play
 
 			const std::string to_string()
 			{
-				if (this->_writer && this->_writer->IsComplete())
+				if (this->_writer /*&& this->_writer->IsComplete()*/)
 				{
 					return this->_buffer.GetString();
 				}
@@ -420,6 +437,8 @@ namespace play
 
 		struct Network
 		{
+			static const char* _peer_id;
+
 			/*
 				native socket
 				websocket
@@ -447,7 +466,7 @@ namespace play
 				return 0;
 			}
 
-			static int initialize(asio::io_service& pIO)
+			static int initialize_device_register(asio::io_service& pIO)
 			{
 				if (initialize_curl()) return 1;
 
@@ -473,7 +492,45 @@ namespace play
 					if (config::utc)
 					{
 						//we will use tcp for async
-						return initialize_tcp_socket(pIO);
+						if (initialize_tcp_socket(pIO) == 0)
+						{
+							char* _device_register_request = (char*)malloc(1024);
+
+							sprintf(
+								_device_register_request,
+								"{\"appId\":\"GAME CENTER PC\",\"deviceId\":\"40d1448a-d0dd-41ba-f450-168c4c0bf98d\",\"renew\":true}\0");
+
+							send_async(_device_register_request, strlen(_device_register_request), [](JSONObject& pJson)
+							{
+								int _type = -1;
+								pJson.get_value("type", _type);
+
+								if (_type != 2)
+									return;
+
+								std::string _content_str;
+								pJson.get_value("content", _content_str);
+								JSONObject _content_jo; 
+								_peer_id = _content_str.c_str();
+
+								char* _server_name_request = (char*)malloc(1024);
+
+								sprintf(
+									_server_name_request,
+									"{\"type\":%d,"
+									"\"content\":\"{\\\"name\\\":\\\"%s\\\"}\"}", 1, SERVER_NAME);
+
+								send_async(_server_name_request, strlen(_server_name_request), [](JSONObject& pJson)
+								{
+									int _type = -1;
+									pJson.get_value("type", _type);
+								});
+							});
+						}
+						else
+						{
+							return 1;
+						}
 					}
 					else
 					{
@@ -522,6 +579,11 @@ namespace play
 				return 0;
 			}
 
+			static void ping()
+			{
+				send_async("{}", 2, [](JSONObject& pJson) {});
+			}
+
 			//send async
 			template<typename PLAYPOD_CALLBACK>
 			static void send_async(
@@ -547,10 +609,19 @@ namespace play
 				{
 					if (pError) return;
 
-					char _buffer[MAX_MESSAGE_SIZE];
-					//auto _total_read =
-					_socket->receive(asio::buffer(_buffer));
+					//TODO : read some async
+					std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
+					asio::error_code _err;
+					char _buffer[MAX_MESSAGE_SIZE];
+					auto _read_len = _socket->read_some(asio::buffer(_buffer), _err);
+					if (_err)
+					{
+						sprintf(s_last_error_code, 
+							"error on receiving data from socket. error code: %d, error message: %s\n", 
+							_err.value(), _err.message());
+						return;
+					}
 					auto _msg_len = to_int(
 						_buffer[0],
 						_buffer[1],
@@ -569,7 +640,7 @@ namespace play
 
 					//call callback
 					pCallBack(_json);
-					
+
 					_json.release();
 				});
 			}
@@ -581,7 +652,6 @@ namespace play
 					curl_easy_cleanup(_curl);
 				}
 			}
-
 
 			static void destroy_tcp()
 			{
@@ -625,8 +695,9 @@ namespace play
 			static std::thread*             _thread;
 			static CURL*                    _curl;
 			static asio::ip::tcp::socket*   _socket;
-
 		};
+
+		const char*				Network::_peer_id = nullptr;
 		bool                    Network::_is_released = false;
 		std::thread*            Network::_thread = nullptr;
 		CURL*                   Network::_curl = nullptr;
@@ -640,22 +711,75 @@ namespace play
 				int _result = 0;
 				std::call_once(s_once_init, [&]()
 				{
-					_result = Network::initialize(pIO);
+					_result = Network::initialize_device_register(pIO);
 				});
 				return _result;
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void ping(const PLAYPOD_CALLBACK& pCallBack)
+			static void get_games_info(const PLAYPOD_CALLBACK& pCallBack)
 			{
-				char* _msg = (char*)malloc(1024);
-				if (!_msg) return;
+				char* _parameters = (char*)malloc(1024);
+				if (!_parameters) return;
 
-				sprintf(
-					_msg,
-					"{\"appId\":5556,\"deviceId\":\"40d14e87-d0dd-41ba-f450-168c4c0bf98d\",\"renew\":true}\0");
-				Network::send_async(_msg, strlen(_msg), pCallBack);
-				free(_msg);
+				sprintf(_parameters, "{}");
+
+				request(request_urls::game_info, _parameters, pCallBack);
+				free(_parameters);
+			}
+
+			/**
+			 * \brief
+			 * \tparam PLAYPOD_CALLBACK
+			 * \param pUrlData
+			 * \param pParamsData  Key Value Array
+			 * \param pCallBack
+			 */
+			template<typename PLAYPOD_CALLBACK>
+			static void request(
+				const url_data& pUrlData,
+				char* pParamsData,
+				const PLAYPOD_CALLBACK& pCallBack)
+			{
+				async_request(pUrlData, pParamsData, pCallBack);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void async_request(
+				const url_data& pUrlData,
+				char* pParamsData,
+				const PLAYPOD_CALLBACK& pCallBack)
+			{
+				char* _gc_param_data = (char*)malloc(1024);
+				sprintf(_gc_param_data,
+					"{\\\\\\\"remoteAddr\\\\\\\": null,"
+					"\\\\\\\"clientMessageId\\\\\\\":\\\\\\\"%s\\\\\\\","
+					"\\\\\\\"serverKey\\\\\\\": %d,"
+					"\\\\\\\"oneTimeToken\\\\\\\": null,"
+					"\\\\\\\"parameters\\\\\\\": %s,"
+					"\\\\\\\"msgType\\\\\\\": %d,"
+					"\\\\\\\"uri\\\\\\\": \\\\\\\"%s\\\\\\\","
+					"\\\\\\\"messageId\\\\\\\": %d,"
+					"\\\\\\\"expireTime\\\\\\\": %d}",
+					"123e4567-e89b-12d3-a456-426655440000", 0, pParamsData, 3, pUrlData._uri, 1001, 0);
+
+				char* _message_vo = (char*)malloc(1024);
+				sprintf(_message_vo,
+					"{\\\"content\\\": \\\"%s\\\","
+					"\\\"messageId\\\":%d,"
+					"\\\"priority\\\": \\\"%s\\\","
+					"\\\"peerName\\\": \\\"%s\\\","
+					"\\\"ttl\\\": %d}",
+					_gc_param_data, 1001, "1", config::ahrrn, 0);
+
+				char* _async_data = (char*)malloc(1024);
+				sprintf(_async_data,
+					"{\"content\": \"%s\","
+					"\"trackerId\":%d,"
+					"\"type\": %d}",
+					_message_vo, 1001, 3);
+
+				Network::send_async(_async_data, strlen(_async_data), pCallBack);
 			}
 		};
 	}
