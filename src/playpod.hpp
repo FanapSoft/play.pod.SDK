@@ -102,7 +102,7 @@ namespace play
 			JSONObject()
 			{
 				//use rapid json to make json
-				this->_writer = new rapidjson::Writer<rapidjson::StringBuffer>(this->_buffer);
+				this->_writer = new rapidjson::Writer<rapidjson::StringBuffer>(this->_write_buffer);
 			}
 
 			//https://qiita.com/k2ymg/items/eef3b15eaa27a89353ab
@@ -117,12 +117,20 @@ namespace play
 				//std::wstring_convert<std::codecvt_utf8<wchar_t>> _conv;
 				//std::wstring _str = _conv.from_bytes(pJSONString);
 
+				this->_json_string = pJSONString;
 				auto _parser = &_document.Parse<rapidjson::kParseStopWhenDoneFlag>(pJSONString.c_str());
 				if (_parser->HasParseError())
 				{
 					sprintf(s_last_error_code, "error on parsing json. error code: %d\n", _parser->GetParseError());
 					return 1;
 				}
+				if (this->_writer)
+				{
+					delete this->_writer;
+					this->_writer = nullptr;
+				}
+				this->_writer = new rapidjson::Writer<rapidjson::StringBuffer>(this->_write_buffer);
+				_document.Accept(*this->_writer);
 				return 0;
 			}
 
@@ -130,7 +138,7 @@ namespace play
 			{
 				if (this->_writer /*&& this->_writer->IsComplete()*/)
 				{
-					return this->_buffer.GetString();
+					return this->_write_buffer.GetString();
 				}
 				return "";
 			}
@@ -417,7 +425,7 @@ namespace play
 			{
 				if (this->_is_released) return 1;
 
-				this->_buffer.Clear();
+				this->_write_buffer.Clear();
 				if (this->_writer)
 				{
 					delete this->_writer;
@@ -431,8 +439,9 @@ namespace play
 		private:
 			bool                                            _is_released = false;
 			rapidjson::Document                             _document;
-			rapidjson::StringBuffer                         _buffer;
+			rapidjson::StringBuffer                         _write_buffer;
 			rapidjson::Writer<rapidjson::StringBuffer>*     _writer = nullptr;
+			std::string										_json_string;
 		};
 
 		struct Network
@@ -610,7 +619,7 @@ namespace play
 					if (pError) return;
 
 					//TODO : read some async
-					std::this_thread::sleep_for(std::chrono::milliseconds(300));
+					std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
 					asio::error_code _err;
 					char _buffer[MAX_MESSAGE_SIZE];
