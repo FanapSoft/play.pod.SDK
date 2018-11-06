@@ -9,13 +9,10 @@
 #include <thread>
 #include <playpod.hpp>
 
-int main(int argc, char** argv)
+using namespace play::pod;
+
+void on_services_ready_callback_handle()
 {
-	using namespace play::pod;
-
-	asio::io_service _io;
-	if (Services::initialize(_io)) return EXIT_FAILURE;
-
 	Services::get_games_info([](JSONObject& pJson)
 	{
 		bool _has_error = false;
@@ -25,11 +22,16 @@ int main(int argc, char** argv)
 		std::string _to_string = pJson.to_string();
 		std::cout << _to_string;
 	});
+}
+
+int main(int argc, char** argv)
+{
+	asio::io_service _io;
+	on_services_ready_callback = on_services_ready_callback_handle;
+	if (Services::initialize(_io)) return EXIT_FAILURE;
 	_io.run();
 
-	while (true)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
-	return 0;
+	std::getchar();
+
+	return EXIT_SUCCESS;
 }

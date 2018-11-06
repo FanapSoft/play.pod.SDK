@@ -14,7 +14,7 @@
 
 #include <thread>
 #include <mutex>
-#include <map>
+#include <condition_variable>
 #include <stdio.h>
 #include <codecvt>
 #include <string>
@@ -34,8 +34,9 @@
 #include <stringbuffer.h>
 #include <document.h>
 
-#define MAX_MESSAGE_SIZE        1024
+#define SERVER_IP				"176.221.69.209:1036"
 #define SERVER_NAME             "bg.game.msg"
+#define MAX_MESSAGE_SIZE        1024
 #define ASYNC_SERVER_NAME       "sandbox.pod.land"
 #define ASYNC_SERVER_PORT       "8002"
 
@@ -50,6 +51,8 @@ namespace play
 {
 	namespace pod
 	{
+		extern std::function<void(void)> on_services_ready_callback = nullptr;
+
 		static const char* get_last_error_code()
 		{
 			return s_last_error_code;
@@ -75,8 +78,7 @@ namespace play
 			static const char* ahrrn;
 		};
 
-		const char* config::ssoiau =
-			"http://176.221.69.209:1036/pages/iap/buy/default.aspx";
+		const char* config::ssoiau = ("http://" + std::string(SERVER_IP) + "/pages/iap/buy/default.aspx").c_str();
 		bool        config::harfs = false;
 		//use encryption
 		bool        config::ure = false;
@@ -117,7 +119,6 @@ namespace play
 				//std::wstring_convert<std::codecvt_utf8<wchar_t>> _conv;
 				//std::wstring _str = _conv.from_bytes(pJSONString);
 
-				this->_json_string = pJSONString;
 				auto _parser = &_document.Parse<rapidjson::kParseStopWhenDoneFlag>(pJSONString.c_str());
 				if (_parser->HasParseError())
 				{
@@ -441,7 +442,6 @@ namespace play
 			rapidjson::Document                             _document;
 			rapidjson::StringBuffer                         _write_buffer;
 			rapidjson::Writer<rapidjson::StringBuffer>*     _writer = nullptr;
-			std::string										_json_string;
 		};
 
 		struct Network
@@ -477,12 +477,14 @@ namespace play
 
 			static int initialize_device_register(asio::io_service& pIO)
 			{
+				_is_ready = false;
+
 				if (initialize_curl()) return 1;
 
 				//get config
 				std::string _result;
 				send_http_request(
-					"http://176.221.69.209:1036/srv/serviceApi/getConfig",
+					("http://" + std::string(SERVER_IP) + "/srv/serviceApi/getConfig").c_str(),
 					_result);
 
 				JSONObject _json;
@@ -503,38 +505,57 @@ namespace play
 						//we will use tcp for async
 						if (initialize_tcp_socket(pIO) == 0)
 						{
-							char* _device_register_request = (char*)malloc(1024);
+							char* _device_register_request = (char*)malloc(MAX_MESSAGE_SIZE);
 
 							sprintf(
 								_device_register_request,
 								"{\"appId\":\"GAME CENTER PC\",\"deviceId\":\"40d1448a-d0dd-41ba-f450-168c4c0bf98d\",\"renew\":true}\0");
 
-							send_async(_device_register_request, strlen(_device_register_request), [](JSONObject& pJson)
+							send_async(_device_register_request, strlen(_device_register_request), 
+								[](JSONObject& pJson)
 							{
 								int _type = -1;
 								pJson.get_value("type", _type);
 
 								if (_type != 2)
+								{
+									sprintf(s_last_error_code, "could not register device to server %s", SERVER_IP);
 									return;
+								}
 
 								std::string _content_str;
 								pJson.get_value("content", _content_str);
 								JSONObject _content_jo; 
 								_peer_id = _content_str.c_str();
 
-								char* _server_name_request = (char*)malloc(1024);
 
+
+								char* _server_name_request = (char*)malloc(MAX_MESSAGE_SIZE);
 								sprintf(
 									_server_name_request,
 									"{\"type\":%d,"
 									"\"content\":\"{\\\"name\\\":\\\"%s\\\"}\"}", 1, SERVER_NAME);
 
-								send_async(_server_name_request, strlen(_server_name_request), [](JSONObject& pJson)
+								send_async(_server_name_request, strlen(_server_name_request),
+									[](JSONObject& pJson)
 								{
 									int _type = -1;
 									pJson.get_value("type", _type);
+									if (_type == 1)
+									{
+										_is_ready = true;
+										if (on_services_ready_callback)
+										{
+											on_services_ready_callback();
+										}
+									}
 								});
+
+								free(_server_name_request);
+
 							});
+
+							free(_device_register_request);
 						}
 						else
 						{
@@ -590,7 +611,68 @@ namespace play
 
 			static void ping()
 			{
+				if (!is_ready()) return;
+				
 				send_async("{}", 2, [](JSONObject& pJson) {});
+			}
+
+			static size_t avaiable_bytes()
+			{
+				asio::socket_base::bytes_readable _socket_readabale_bytes(true);
+				size_t _avaiable_bytes = 0;
+				int _time_out = 2000;
+				while (!_avaiable_bytes && _time_out > 0)
+				{
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
+					_socket->io_control(_socket_readabale_bytes);
+					_avaiable_bytes = _socket_readabale_bytes.get();
+					_time_out--;
+				}
+				return _avaiable_bytes;
+			}
+
+			//read async
+			template<typename PLAYPOD_CALLBACK>
+			static void read_async(const size_t pSizeInBytes, const PLAYPOD_CALLBACK& pCallBack)
+			{
+				if (!_socket) return;
+
+				auto _rcv_buffer = (char*)malloc(pSizeInBytes);
+				_socket->async_read_some(asio::buffer(_rcv_buffer, pSizeInBytes),
+					[_rcv_buffer, &pCallBack](asio::error_code pError, std::size_t pLength)
+				{
+					if (pError)
+					{
+						sprintf(s_last_error_code,
+							"error on receiving data from socket. error code: %d, error message: %s\n",
+							pError.value(), pError.message());
+						return;
+					}
+
+					std::string _json_str;
+					_json_str.resize(pLength);
+					memcpy(&_json_str[0], &_rcv_buffer[0], pLength);
+					if (!_json_str.empty())
+					{
+						JSONObject _json;
+						//create json from string
+						if (_json.from_string(_json_str))
+						{
+							sprintf(s_last_error_code,
+								"error on parsing json.");
+						}
+						else
+						{
+							//call callback
+							pCallBack(_json);
+						}
+
+						//clear resources
+						_json_str.clear();
+						_json.release();
+					}
+					free(_rcv_buffer);
+				});
 			}
 
 			//send async
@@ -616,41 +698,52 @@ namespace play
 					asio::buffer(pMessage, pLenght),
 					[&pCallBack](asio::error_code pError, std::size_t pLength)
 				{
-					if (pError) return;
-
-					//TODO : read some async
-					std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-
-					asio::error_code _err;
-					char _buffer[MAX_MESSAGE_SIZE];
-					auto _read_len = _socket->read_some(asio::buffer(_buffer), _err);
-					if (_err)
+					if (pError)
 					{
-						sprintf(s_last_error_code, 
-							"error on receiving data from socket. error code: %d, error message: %s\n", 
-							_err.value(), _err.message());
+						sprintf(s_last_error_code,
+							"error on writing data to socket. error code: %d, error message: %s\n",
+							pError.value(), pError.message());
 						return;
 					}
-					auto _msg_len = to_int(
-						_buffer[0],
-						_buffer[1],
-						_buffer[2],
-						_buffer[3]);
 
-					std::string _json_str;
-					_json_str.resize(_msg_len);//the first 4 bytes are for lenght
-					memcpy(&_json_str[0], &_buffer[4], _msg_len);
+					char _lenght_buffer[4];
+					auto _bytes = avaiable_bytes();
+					if (_bytes)
+					{
+						//read lenght
+						auto _len = _socket->read_some(asio::buffer(_lenght_buffer, 4), pError);
+						if ((_len != 4) || pError)
+						{
+							sprintf(s_last_error_code,
+								"error on reading lenght of data. error code: %d, error message: %s\n",
+								pError.value(), pError.message());
+						}
+						else
+						{
+							auto _msg_len = to_int(
+								_lenght_buffer[0],
+								_lenght_buffer[1],
+								_lenght_buffer[2],
+								_lenght_buffer[3]);
 
-					JSONObject _json;
-					//create json from string
-					_json.from_string(_json_str);
-					//clear resources
-					_json_str.clear();
-
-					//call callback
-					pCallBack(_json);
-
-					_json.release();
+							//read message
+							_bytes = avaiable_bytes();
+							if (_bytes == _msg_len)
+							{
+								read_async(_bytes, pCallBack);
+							}
+							else
+							{
+								sprintf(s_last_error_code,
+									"lenght of message is not equal to lenght of read bytes");
+							}
+						}
+					}
+					else
+					{
+						sprintf(s_last_error_code,
+							"read time out");
+					}
 				});
 			}
 
@@ -681,6 +774,11 @@ namespace play
 				return 0;
 			}
 
+			static bool is_ready()
+			{
+				return _is_ready;
+			}
+
 		private:
 			//initialize http request
 			static int initialize_curl()
@@ -700,17 +798,19 @@ namespace play
 				return pSize * pNmemb;
 			}
 
-			static bool                     _is_released;
-			static std::thread*             _thread;
-			static CURL*                    _curl;
-			static asio::ip::tcp::socket*   _socket;
+			static bool										_is_released;
+			static std::thread*								_thread;
+			static CURL*									_curl;
+			static asio::ip::tcp::socket*					_socket;
+			static bool										_is_ready;
 		};
 
-		const char*				Network::_peer_id = nullptr;
-		bool                    Network::_is_released = false;
-		std::thread*            Network::_thread = nullptr;
-		CURL*                   Network::_curl = nullptr;
-		asio::ip::tcp::socket*  Network::_socket = nullptr;
+		const char*										Network::_peer_id = nullptr;
+		bool											Network::_is_released = false;
+		std::thread*									Network::_thread = nullptr;
+		CURL*											Network::_curl = nullptr;
+		asio::ip::tcp::socket*							Network::_socket = nullptr;
+		bool											Network::_is_ready = false;
 
 		struct Services
 		{
@@ -731,26 +831,10 @@ namespace play
 				char* _parameters = (char*)malloc(1024);
 				if (!_parameters) return;
 
-				sprintf(_parameters, "{}");
+				sprintf(_parameters, "[]");
 
-				request(request_urls::game_info, _parameters, pCallBack);
+				async_request(request_urls::game_info, _parameters, pCallBack);
 				free(_parameters);
-			}
-
-			/**
-			 * \brief
-			 * \tparam PLAYPOD_CALLBACK
-			 * \param pUrlData
-			 * \param pParamsData  Key Value Array
-			 * \param pCallBack
-			 */
-			template<typename PLAYPOD_CALLBACK>
-			static void request(
-				const url_data& pUrlData,
-				char* pParamsData,
-				const PLAYPOD_CALLBACK& pCallBack)
-			{
-				async_request(pUrlData, pParamsData, pCallBack);
 			}
 
 			template<typename PLAYPOD_CALLBACK>
@@ -759,7 +843,7 @@ namespace play
 				char* pParamsData,
 				const PLAYPOD_CALLBACK& pCallBack)
 			{
-				char* _gc_param_data = (char*)malloc(1024);
+				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_gc_param_data,
 					"{\\\\\\\"remoteAddr\\\\\\\": null,"
 					"\\\\\\\"clientMessageId\\\\\\\":\\\\\\\"%s\\\\\\\","
@@ -772,7 +856,7 @@ namespace play
 					"\\\\\\\"expireTime\\\\\\\": %d}",
 					"123e4567-e89b-12d3-a456-426655440000", 0, pParamsData, 3, pUrlData._uri, 1001, 0);
 
-				char* _message_vo = (char*)malloc(1024);
+				auto _message_vo = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_message_vo,
 					"{\\\"content\\\": \\\"%s\\\","
 					"\\\"messageId\\\":%d,"
@@ -781,14 +865,55 @@ namespace play
 					"\\\"ttl\\\": %d}",
 					_gc_param_data, 1001, "1", config::ahrrn, 0);
 
-				char* _async_data = (char*)malloc(1024);
-				sprintf(_async_data,
-					"{\"content\": \"%s\","
-					"\"trackerId\":%d,"
-					"\"type\": %d}",
-					_message_vo, 1001, 3);
+				auto _async_data = (char*)malloc(MAX_MESSAGE_SIZE);
+				//sprintf(_async_data,
+				//	"{\"content\": \"%s\","
+				//	"\"trackerId\":%d,"
+				//	"\"type\": %d}",
+				//	_message_vo, 1001, 3);
 
+				struct j
+				{
+					std::string		content = "{\"content\":\"{\\\"clientMessageId\\\":\\\"3a6c9675-2511-48f5-b3c6-a283160b0837\\\",\\\"serverKey\\\":0,\\\"parameters\\\":[{\\\"name\\\":\\\"filter\\\",\\\"value\\\":\\\"a\\\"},{\\\"name\\\":\\\"size\\\",\\\"value\\\":10},{\\\"name\\\":\\\"offset\\\",\\\"value\\\":0}],\\\"msgType\\\":3,\\\"uri\\\":\\\"\\\\\\/srv\\\\\\/game\\\\\\/get\\\",\\\"messageId\\\":1001,\\\"expireTime\\\":0}\",\"messageId\":1002,\"priority\":\"1\",\"peerName\":\"bp.gc.sandbox\",\"ttl\":0}";
+					int				trackerId = 1001;
+					int				type = 5;
+					int				timeout = 20000;
+				} _j;
+
+
+				using namespace rapidjson;
+				StringBuffer _string_buffer;
+				Writer<StringBuffer> _writer(_string_buffer);
+
+				_writer.StartObject();
+				{
+					_writer.Key("content");
+					_writer.String(_j.content.c_str());
+					_writer.Key("trackerId");
+					_writer.Int(_j.trackerId);
+					_writer.Key("type");
+					_writer.Int(_j.type);
+					_writer.Key("timeout");
+					_writer.Int(_j.timeout);
+				}
+				_writer.EndObject();
+
+				auto _size = _string_buffer.GetSize();
+				auto _str = _string_buffer.GetString();
+
+				strcpy(_async_data, _str);
+				//sprintf(_async_data,
+				//	"{" \
+				//	"\"content\": \"{\\\"content\\\":\\\"{\\\\\":[{\\\\\"name\\\\\":\\\\\"filter\\\\\",\\\\\"value\\\\\":\\\\\"a\\\\\"},{\\\\\"name\\\\\":\\\\\"size\\\\\",\\\\\"value\\\\\":10},{\\\\\"name\\\\\":\\\\\"offset\\\\\",\\\\\"value\\\\\":0}],\\\\\"msgType\\\\\":3,\\\\\"uri\\\\\":\\\\\"\\\\\\\\/srv\\\\\\\\/game\\\\\\\\/get\\\\\",\\\\\"messageId\\\\\":1001,\\\\\"expireTime\\\\\":0}\\\",\\\"messageId\\\":1001,\\\"priority\\\":\\\"1\\\",\\\"peerName\\\":\\\"bp.gc.sandbox\\\",\\\"ttl\\\":0}\\\"," \
+				//	"\"trackerId\":1001," \
+				//	"\"type\":5," \
+				//	"\"timeout\":20000" \
+				//	"}");
 				Network::send_async(_async_data, strlen(_async_data), pCallBack);
+
+				free(_gc_param_data);
+				free(_message_vo);
+				free(_async_data);
 			}
 		};
 	}
