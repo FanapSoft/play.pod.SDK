@@ -34,11 +34,13 @@
 #include <stringbuffer.h>
 #include <document.h>
 
+#define APP_ID					"GAME_CENTER_PC"
 #define SERVER_IP				"176.221.69.209:1036"
 #define SERVER_NAME             "bg.game.msg"
 #define MAX_MESSAGE_SIZE        1024
 #define ASYNC_SERVER_NAME       "sandbox.pod.land"
 #define ASYNC_SERVER_PORT       "8002"
+#define HTTP_PORT				"8003"
 
 //services
 #define PING                "user/ping"
@@ -446,8 +448,6 @@ namespace play
 
 		struct Network
 		{
-			static const char* _peer_id;
-
 			/*
 				native socket
 				websocket
@@ -475,6 +475,30 @@ namespace play
 				return 0;
 			}
 
+			static int send_http_rest_post(const char* pURL, const char* pMessage, std::string& pResult)
+			{
+				if (!_curl) return 1;
+
+				//set POST url
+				curl_easy_setopt(_curl, CURLOPT_URL, pURL);
+				//now specify the POST data
+				curl_easy_setopt(_curl, CURLOPT_COPYPOSTFIELDS, pMessage);//CURLOPT_COPYPOSTFIELDS for async
+
+				curl_easy_setopt(_curl, CURLOPT_FOLLOWLOCATION, 1L);
+				curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, _curl_write_callback);
+				curl_easy_setopt(_curl, CURLOPT_WRITEDATA, &pResult);
+				//perform the request
+				auto _result = curl_easy_perform(_curl);
+
+				//check for errors
+				if (_result != CURLE_OK)
+				{
+					sprintf(s_last_error_code, "curl_easy_perform() failed: %s\n", curl_easy_strerror(_result));
+					return 1;
+				}
+				return 0;
+			}
+
 			static int initialize_device_register(asio::io_service& pIO)
 			{
 				_is_ready = false;
@@ -487,84 +511,140 @@ namespace play
 					("http://" + std::string(SERVER_IP) + "/srv/serviceApi/getConfig").c_str(),
 					_result);
 
-				JSONObject _json;
-				_json.from_string(_result);
-				//get following data for config
-				_json.get_value("harfs", config::harfs);
-				_json.get_value("ure", config::ure);
-				_json.get_value("utc", config::utc);
-				_json.release();
-
-				if (!config::harfs)
+				if (!_result.empty())
 				{
-					//we don't need http request anymore
-					destroy_curl();
+					JSONObject _json;
+					_json.from_string(_result);
+					//get following data for config
+					_json.get_value("harfs", config::harfs);
+					_json.get_value("ure", config::ure);
+					_json.get_value("utc", config::utc);
+					_json.release();
 
-					if (config::utc)
+
+					//TODO: hack
+					//force to use http
+					config::harfs = true;
+
+					if (config::harfs)
 					{
-						//we will use tcp for async
-						if (initialize_tcp_socket(pIO) == 0)
+						_result.clear();
+						std::string _http_request = ("http://" + std::string(ASYNC_SERVER_NAME) + ":" + HTTP_PORT +
+							"/register/?action=register&deviceId=" + "40d1448b-d0dd-41ba-f450-168c4c0bf98d" + "&appId=" + APP_ID);
+						
+						send_http_request(_http_request.c_str(), _result);
+
+						if (!_result.empty())
 						{
-							char* _device_register_request = (char*)malloc(MAX_MESSAGE_SIZE);
-
-							sprintf(
-								_device_register_request,
-								"{\"appId\":\"GAME CENTER PC\",\"deviceId\":\"40d1448a-d0dd-41ba-f450-168c4c0bf98d\",\"renew\":true}\0");
-
-							send_async(_device_register_request, strlen(_device_register_request), 
-								[](JSONObject& pJson)
+							bool _success = false;
+							std::string _content_value;
+							JSONObject _json;
+							if (_json.from_string(_result))
 							{
-								int _type = -1;
-								pJson.get_value("type", _type);
+								sprintf(s_last_error_code, "could not register device via http request: %s", _http_request);
+								return 1;
+							}
 
-								if (_type != 2)
+							_json.get_value("success", _success);
+							if (_success)
+							{
+								_json.get_value("content", _content_value);
+								if (!_content_value.empty())
 								{
-									sprintf(s_last_error_code, "could not register device to server %s", SERVER_IP);
-									return;
-								}
+									JSONObject _content_json;
+									_content_json.from_string(_content_value);
+									_content_json.get_value("token", _peer_id);
+									_content_value.clear();
 
-								std::string _content_str;
-								pJson.get_value("content", _content_str);
-								JSONObject _content_jo; 
-								_peer_id = _content_str.c_str();
-
-
-
-								char* _server_name_request = (char*)malloc(MAX_MESSAGE_SIZE);
-								sprintf(
-									_server_name_request,
-									"{\"type\":%d,"
-									"\"content\":\"{\\\"name\\\":\\\"%s\\\"}\"}", 1, SERVER_NAME);
-
-								send_async(_server_name_request, strlen(_server_name_request),
-									[](JSONObject& pJson)
-								{
-									int _type = -1;
-									pJson.get_value("type", _type);
-									if (_type == 1)
+									_is_ready = true;
+									if (on_services_ready_callback)
 									{
-										_is_ready = true;
-										if (on_services_ready_callback)
-										{
-											on_services_ready_callback();
-										}
+										on_services_ready_callback();
 									}
-								});
-
-								free(_server_name_request);
-
-							});
-
-							free(_device_register_request);
-						}
-						else
-						{
-							return 1;
+								}
+							}
+							_result.clear();
 						}
 					}
 					else
 					{
-						//we will websocket for async
+						int _result = 0;
+
+						//we don't need http request anymore
+						destroy_curl();
+
+						char* _device_register_request = (char*)malloc(MAX_MESSAGE_SIZE);
+						sprintf(
+							_device_register_request,
+							"{\"appId\":\"GAME CENTER PC\",\"deviceId\":\"40d1448a-d0dd-41ba-f450-168c4c0bf98d\",\"renew\":true}\0");
+
+						if (config::utc)
+						{
+							//we will use tcp for async
+							if (initialize_tcp_socket(pIO))
+							{
+								//some problem was happended
+								_result = 1;
+							}
+							else
+							{
+								send_async(_device_register_request, strlen(_device_register_request),
+									[](JSONObject& pJson)
+								{
+									int _type = -1;
+									pJson.get_value("type", _type);
+
+									if (_type != 2)
+									{
+										sprintf(s_last_error_code, "could not register device to server %s", SERVER_IP);
+										return;
+									}
+
+									//TOSO: TESSSSSSSSSSSSSSSSSSSSSSST it
+									std::string _content_str;
+									pJson.get_value("content", _content_str);
+									JSONObject _content_jo;
+									if (_content_jo.from_string(_content_str))
+									{
+										sprintf(s_last_error_code, "could not parse content type %s", SERVER_IP);
+										return;
+									}
+									_content_jo.get_value("token", _peer_id);
+
+									char* _server_name_request = (char*)malloc(MAX_MESSAGE_SIZE);
+									sprintf(
+										_server_name_request,
+										"{\"type\":%d,"
+										"\"content\":\"{\\\"name\\\":\\\"%s\\\"}\"}", 1, SERVER_NAME);
+
+									send_async(_server_name_request, strlen(_server_name_request),
+										[](JSONObject& pJson)
+									{
+										int _type = -1;
+										pJson.get_value("type", _type);
+										if (_type == 1)
+										{
+											_is_ready = true;
+											if (on_services_ready_callback)
+											{
+												on_services_ready_callback();
+											}
+										}
+									});
+
+									free(_server_name_request);
+
+								});
+							}
+						}
+						else
+						{
+							//we will use web socket for async
+						}
+						//free allocated memory
+						free(_device_register_request);
+
+						return _result;
 					}
 				}
 
@@ -609,14 +689,7 @@ namespace play
 				return 0;
 			}
 
-			static void ping()
-			{
-				if (!is_ready()) return;
-				
-				send_async("{}", 2, [](JSONObject& pJson) {});
-			}
-
-			static size_t avaiable_bytes()
+			static size_t avaiable_tcp_bytes()
 			{
 				asio::socket_base::bytes_readable _socket_readabale_bytes(true);
 				size_t _avaiable_bytes = 0;
@@ -633,7 +706,7 @@ namespace play
 
 			//read async
 			template<typename PLAYPOD_CALLBACK>
-			static void read_async(const size_t pSizeInBytes, const PLAYPOD_CALLBACK& pCallBack)
+			static void read_async_tcp(const size_t pSizeInBytes, const PLAYPOD_CALLBACK& pCallBack)
 			{
 				if (!_socket) return;
 
@@ -675,10 +748,10 @@ namespace play
 				});
 			}
 
-			//send async
+			//send async with tcp
 			template<typename PLAYPOD_CALLBACK>
-			static void send_async(
-				char* pMessage,
+			static void send_async_tcp(
+				const char* pMessage,
 				size_t pLenght,
 				const PLAYPOD_CALLBACK& pCallBack)
 			{
@@ -707,7 +780,7 @@ namespace play
 					}
 
 					char _lenght_buffer[4];
-					auto _bytes = avaiable_bytes();
+					auto _bytes = avaiable_tcp_bytes();
 					if (_bytes)
 					{
 						//read lenght
@@ -727,10 +800,10 @@ namespace play
 								_lenght_buffer[3]);
 
 							//read message
-							_bytes = avaiable_bytes();
+							_bytes = avaiable_tcp_bytes();
 							if (_bytes == _msg_len)
 							{
-								read_async(_bytes, pCallBack);
+								read_async_tcp(_bytes, pCallBack);
 							}
 							else
 							{
@@ -745,6 +818,47 @@ namespace play
 							"read time out");
 					}
 				});
+			}
+
+			//send async
+			template<typename PLAYPOD_CALLBACK>
+			static void send_async(
+				const char* pMessage,
+				size_t pLenght,
+				const PLAYPOD_CALLBACK& pCallBack)
+			{
+				if (config::harfs)
+				{
+					//send using http
+					const std::string _post_url = ("http://" + std::string(ASYNC_SERVER_NAME) + ":" + HTTP_PORT + "/srv/");
+					std::string _result;
+
+					std::string _msg = std::string(pMessage) + std::string("&peerId = ") + std::to_string(Network::_peer_id);
+					send_http_rest_post(_post_url.c_str(), _msg.c_str(), _result);
+					if (!_result.empty())
+					{
+						//pCallBack();
+					}
+				}
+				else
+				{
+					if (config::utc)
+					{
+						//send data using native tcp
+						send_async_tcp(pMessage, pLenght, pCallBack);
+					}
+					else
+					{
+						//send data using web socket
+					}
+				}
+			}
+
+			static void ping()
+			{
+				if (!is_ready()) return;
+
+				send_async("{}", 2, [](JSONObject& pJson) {});
 			}
 
 			static void destroy_curl()
@@ -803,9 +917,10 @@ namespace play
 			static CURL*									_curl;
 			static asio::ip::tcp::socket*					_socket;
 			static bool										_is_ready;
+			static uint64_t									_peer_id;
 		};
 
-		const char*										Network::_peer_id = nullptr;
+		uint64_t										Network::_peer_id = 0;
 		bool											Network::_is_released = false;
 		std::thread*									Network::_thread = nullptr;
 		CURL*											Network::_curl = nullptr;
@@ -909,7 +1024,10 @@ namespace play
 				//	"\"type\":5," \
 				//	"\"timeout\":20000" \
 				//	"}");
-				Network::send_async(_async_data, strlen(_async_data), pCallBack);
+				//Network::send_async(_async_data, strlen(_async_data), pCallBack);
+
+				const std::string _msg = "{\"content\":\"{\\\"content\\\":\\\"{\\\\\"clientMessageId\\\\\":\\\\\"2a6c9675-2511-48f5-b3c6-a283160b0837\\\\\",\\\\\"serverKey\\\\\":0,\\\\\"parameters\\\\\":[{\\\\\"name\\\\\":\\\\\"filter\\\\\",\\\\\"value\\\\\":\\\\\"a\\\\\"},{\\\\\"name\\\\\":\\\\\"size\\\\\",\\\\\"value\\\\\":10},{\\\\\"name\\\\\":\\\\\"offset\\\\\",\\\\\"value\\\\\":0}],\\\\\"msgType\\\\\":3,\\\\\"uri\\\\\":\\\\\"\\\\\\\\/srv\\\\\\\\/game\\\\\\\\/get\\\\\",\\\\\"messageId\\\\\":1001,\\\\\"expireTime\\\\\":0}\\\",\\\"messageId\\\":1001,\\\"priority\\\":\\\"1\\\",\\\"peerName\\\":\\\"bp.gc.sandbox\\\",\\\"ttl\\\":0}\", \"trackerId\":1001, \"type\" : 5, \"timeout\" : 20000}";
+				Network::send_async(_msg.c_str(), _msg.size(), pCallBack);
 
 				free(_gc_param_data);
 				free(_message_vo);
