@@ -469,7 +469,7 @@ namespace play
 				//check for errors
 				if (_result != CURLE_OK)
 				{
-					sprintf(s_last_error_code, "curl_easy_perform() failed: %s\n", curl_easy_strerror(_result));
+					sprintf(s_last_error_code, "send_http_request failed: %s\n", curl_easy_strerror(_result));
 					return 1;
 				}
 				return 0;
@@ -482,18 +482,28 @@ namespace play
 				//set POST url
 				curl_easy_setopt(_curl, CURLOPT_URL, pURL);
 				//now specify the POST data
-				curl_easy_setopt(_curl, CURLOPT_COPYPOSTFIELDS, pMessage);//CURLOPT_COPYPOSTFIELDS for async
-
+				curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, pMessage);
+				curl_easy_setopt(_curl, CURLOPT_POST, 1L);
 				curl_easy_setopt(_curl, CURLOPT_FOLLOWLOCATION, 1L);
 				curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, _curl_write_callback);
 				curl_easy_setopt(_curl, CURLOPT_WRITEDATA, &pResult);
+
+				//set http header
+				struct curl_slist* _chunk = NULL;
+				//_chunk = curl_slist_append(_chunk, "content-type:application/x-www-form-urlencoded");
+				_chunk = curl_slist_append(_chunk, "Accept: application/json");
+				curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _chunk);
+
 				//perform the request
 				auto _result = curl_easy_perform(_curl);
+
+				//free chuck
+				curl_slist_free_all(_chunk);
 
 				//check for errors
 				if (_result != CURLE_OK)
 				{
-					sprintf(s_last_error_code, "curl_easy_perform() failed: %s\n", curl_easy_strerror(_result));
+					sprintf(s_last_error_code, "send_http_rest_post failed: %s\n", curl_easy_strerror(_result));
 					return 1;
 				}
 				return 0;
@@ -833,7 +843,7 @@ namespace play
 					const std::string _post_url = ("http://" + std::string(ASYNC_SERVER_NAME) + ":" + HTTP_PORT + "/srv/");
 					std::string _result;
 
-					std::string _msg = std::string(pMessage) + std::string("&peerId = ") + std::to_string(Network::_peer_id);
+					std::string _msg = "data=" + std::string(pMessage) + std::string("&peerId=") + std::to_string(Network::_peer_id);
 					send_http_rest_post(_post_url.c_str(), _msg.c_str(), _result);
 					if (!_result.empty())
 					{
@@ -1004,12 +1014,12 @@ namespace play
 				{
 					_writer.Key("content");
 					_writer.String(_j.content.c_str());
-					_writer.Key("trackerId");
-					_writer.Int(_j.trackerId);
-					_writer.Key("type");
-					_writer.Int(_j.type);
-					_writer.Key("timeout");
-					_writer.Int(_j.timeout);
+					//_writer.Key("trackerId");
+					//_writer.Int(_j.trackerId);
+					//_writer.Key("type");
+					//_writer.Int(_j.type);
+					//_writer.Key("timeout");
+					//_writer.Int(_j.timeout);
 				}
 				_writer.EndObject();
 
@@ -1026,8 +1036,8 @@ namespace play
 				//	"}");
 				//Network::send_async(_async_data, strlen(_async_data), pCallBack);
 
-				const std::string _msg = "{\"content\":\"{\\\"content\\\":\\\"{\\\\\"clientMessageId\\\\\":\\\\\"2a6c9675-2511-48f5-b3c6-a283160b0837\\\\\",\\\\\"serverKey\\\\\":0,\\\\\"parameters\\\\\":[{\\\\\"name\\\\\":\\\\\"filter\\\\\",\\\\\"value\\\\\":\\\\\"a\\\\\"},{\\\\\"name\\\\\":\\\\\"size\\\\\",\\\\\"value\\\\\":10},{\\\\\"name\\\\\":\\\\\"offset\\\\\",\\\\\"value\\\\\":0}],\\\\\"msgType\\\\\":3,\\\\\"uri\\\\\":\\\\\"\\\\\\\\/srv\\\\\\\\/game\\\\\\\\/get\\\\\",\\\\\"messageId\\\\\":1001,\\\\\"expireTime\\\\\":0}\\\",\\\"messageId\\\":1001,\\\"priority\\\":\\\"1\\\",\\\"peerName\\\":\\\"bp.gc.sandbox\\\",\\\"ttl\\\":0}\", \"trackerId\":1001, \"type\" : 5, \"timeout\" : 20000}";
-				Network::send_async(_msg.c_str(), _msg.size(), pCallBack);
+				//const std::string _msg = "{\"content\":\"{\\\"content\\\":\\\"{\\\\\"clientMessageId\\\\\":\\\\\"2a6c9675-2511-48f5-b3c6-a283160b0837\\\\\",\\\\\"serverKey\\\\\":0,\\\\\"parameters\\\\\":[{\\\\\"name\\\\\":\\\\\"filter\\\\\",\\\\\"value\\\\\":\\\\\"a\\\\\"},{\\\\\"name\\\\\":\\\\\"size\\\\\",\\\\\"value\\\\\":10},{\\\\\"name\\\\\":\\\\\"offset\\\\\",\\\\\"value\\\\\":0}],\\\\\"msgType\\\\\":3,\\\\\"uri\\\\\":\\\\\"\\\\\\\\/srv\\\\\\\\/game\\\\\\\\/get\\\\\",\\\\\"messageId\\\\\":1001,\\\\\"expireTime\\\\\":0}\\\",\\\"messageId\\\":1001,\\\"priority\\\":\\\"1\\\",\\\"peerName\\\":\\\"bp.gc.sandbox\\\",\\\"ttl\\\":0}\", \"trackerId\":1001, \"type\" : 5, \"timeout\" : 20000}";
+				Network::send_async(_str, _size, pCallBack);
 
 				free(_gc_param_data);
 				free(_message_vo);
