@@ -98,6 +98,12 @@ namespace playpod
 				this->_writer = new rapidjson::Writer<rapidjson::StringBuffer>(this->_write_buffer);
 			}
 
+			int from_object(const rapidjson::Value& pValue)
+			{
+				_document.CopyFrom(pValue, _document.GetAllocator());
+				return 0;
+			}
+
 			//https://qiita.com/k2ymg/items/eef3b15eaa27a89353ab
 			//typedef rapidjson::GenericDocument< rapidjson::UTF8<> > document_utf16;
 			//typedef rapidjson::GenericValue< rapidjson::UTF8<> > value_utf16;
@@ -232,82 +238,82 @@ namespace playpod
 				{
 					if (_document[pKey].IsNull())
 					{
-						return 0;
+						return true;
 					}
 				}
-				return 1;
+				return false;
 			}
 
-			int get_is_false(const char* pKey)
+			bool get_is_false(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsFalse())
 					{
-						return 0;
+						return true;
 					}
 				}
-				return 1;
+				return false;
 			}
 
-			int get_is_true(const char* pKey)
+			bool get_is_true(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsTrue())
 					{
-						return 0;
+						return true;
 					}
 				}
-				return 1;
+				return false;
 			}
 
-			int get_is_bool(const char* pKey)
+			bool get_is_bool(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsBool())
 					{
-						return 0;
+						return true;
 					}
 				}
-				return 1;
+				return false;
 			}
 
-			int get_is_object(const char* pKey)
+			bool get_is_object(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsObject())
 					{
-						return 0;
+						return true;
 					}
 				}
-				return 1;
+				return false;
 			}
 
-			int get_is_array(const char* pKey)
+			bool get_is_array(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsArray())
 					{
-						return 0;
+						return true;
 					}
 				}
-				return 1;
+				return false;
 			}
 
-			int get_is_number(const char* pKey)
+			bool get_is_number(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsNumber())
 					{
-						return 0;
+						return true;
 					}
 				}
-				return 1;
+				return false;
 			}
 
 			int get_value(const char* pKey, bool& pValue)
@@ -412,6 +418,40 @@ namespace playpod
 					}
 				}
 				return 1;
+			}
+
+			int get_array(const char* pKey, JSONObject& pJsonObject)
+			{
+				if (_document.HasMember(pKey))
+				{
+					if (_document[pKey].IsArray())
+					{
+						pJsonObject.from_object(_document[pKey]);
+						return 0;
+					}
+				}
+
+				return 1;
+			}
+
+			int get_array_value(const unsigned int& pIndex, JSONObject& pJsonObject)
+			{
+				if (_document.IsArray())
+				{
+					const auto _size = _document.End() - _document.Begin();
+					if (pIndex < _size)
+					{
+						pJsonObject.from_object(_document[pIndex]);
+						return 0;
+					}
+				}
+
+				return 1;
+			}
+
+			int get_array_size()
+			{
+				return _document.End() - _document.Begin();
 			}
 
 			int release()
@@ -954,7 +994,7 @@ namespace playpod
 		};
 
 		// Implement application-level callbacks for the browser process.
-		class cef_app : public CefApp, public CefBrowserProcessHandler 
+		class cef_app : public CefApp, public CefBrowserProcessHandler
 		{
 		public:
 			cef_app()
@@ -968,7 +1008,7 @@ namespace playpod
 			}
 
 			//cefApp methods
-			virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE 
+			virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE
 			{
 				return this;
 			}
@@ -1000,7 +1040,7 @@ namespace playpod
 
 				//CefRefPtr<SimpleApp> app(new SimpleApp);
 				//CefInitialize(_main_args, _settings, app.get(), NULL);
-				
+
 				CefRunMessageLoop();
 				CefShutdown();
 			}
