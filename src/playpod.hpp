@@ -110,7 +110,7 @@ namespace playpod
 				//std::wstring_convert<std::codecvt_utf8<wchar_t>> _conv;
 				//std::wstring _str = _conv.from_bytes(pJSONString);
 				//reset last error code
-				std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+				std::memset(s_last_error_code, '\0', MAX_MESSAGE_SIZE);
 				auto _parser = &_document.Parse<rapidjson::kParseStopWhenDoneFlag>(pJSONString.c_str());
 				if (_parser->HasParseError())
 				{
@@ -450,7 +450,7 @@ namespace playpod
 				if (!_curl) return 1;
 
 				//reset last error code
-				std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+				std::memset(s_last_error_code, '\0', MAX_MESSAGE_SIZE);
 
 				curl_easy_setopt(_curl, CURLOPT_URL, pURL);
 				curl_easy_setopt(_curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -473,7 +473,7 @@ namespace playpod
 				if (!_curl) return 1;
 
 				//reset last error code
-				std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+				std::memset(s_last_error_code, '\0', MAX_MESSAGE_SIZE);
 
 				//set POST url
 				curl_easy_setopt(_curl, CURLOPT_URL, pURL);
@@ -534,7 +534,7 @@ namespace playpod
 					config::harfs = true;
 
 					//reset last error code
-					std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+					std::memset(s_last_error_code, '\0', MAX_MESSAGE_SIZE);
 
 					if (config::harfs)
 					{
@@ -721,7 +721,7 @@ namespace playpod
 				if (!_socket) return;
 
 				//reset last error code
-				std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+				std::memset(s_last_error_code, '\0', MAX_MESSAGE_SIZE);
 
 				auto _rcv_buffer = (char*)malloc(pSizeInBytes);
 				_socket->async_read_some(asio::buffer(_rcv_buffer, pSizeInBytes),
@@ -771,7 +771,7 @@ namespace playpod
 				if (!_socket) return;
 
 				//reset last error code
-				std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+				std::memset(s_last_error_code, '\0', MAX_MESSAGE_SIZE);
 
 				int _len = static_cast<int>(pLenght);
 				//convert c++ int to java int structure
@@ -846,7 +846,7 @@ namespace playpod
 				if (config::harfs)
 				{
 					//reset last error code
-					std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+					std::memset(s_last_error_code, '\0', MAX_MESSAGE_SIZE);
 
 					//send using http rest post
 					std::string _result;
