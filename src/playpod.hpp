@@ -43,7 +43,7 @@
 #define HTTP_PORT				"8003"
 
 //services
-#define PING                "user/ping"
+#define PING					"user/ping"
 
 
 static std::once_flag s_once_init;
@@ -118,7 +118,8 @@ namespace playpod
 			using namespace rapidjson;
 			//std::wstring_convert<std::codecvt_utf8<wchar_t>> _conv;
 			//std::wstring _str = _conv.from_bytes(pJSONString);
-
+			//reset last error code
+			std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
 			auto _parser = &_document.Parse<rapidjson::kParseStopWhenDoneFlag>(pJSONString.c_str());
 			if (_parser->HasParseError())
 			{
@@ -457,6 +458,9 @@ namespace playpod
 		{
 			if (!_curl) return 1;
 
+			//reset last error code
+			std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+
 			curl_easy_setopt(_curl, CURLOPT_URL, pURL);
 			curl_easy_setopt(_curl, CURLOPT_FOLLOWLOCATION, 1L);
 			curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, _curl_write_callback);
@@ -476,6 +480,9 @@ namespace playpod
 		static int send_http_rest_post(const char* pURL, const char* pMessage, size_t pMessageLenght, std::string& pResult)
 		{
 			if (!_curl) return 1;
+
+			//reset last error code
+			std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
 
 			//set POST url
 			curl_easy_setopt(_curl, CURLOPT_URL, pURL);
@@ -534,6 +541,9 @@ namespace playpod
 				//TODO: hack
 				//force to use http
 				config::harfs = true;
+
+				//reset last error code
+				std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
 
 				if (config::harfs)
 				{
@@ -719,6 +729,9 @@ namespace playpod
 		{
 			if (!_socket) return;
 
+			//reset last error code
+			std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+
 			auto _rcv_buffer = (char*)malloc(pSizeInBytes);
 			_socket->async_read_some(asio::buffer(_rcv_buffer, pSizeInBytes),
 				[_rcv_buffer, &pCallBack](asio::error_code pError, std::size_t pLength)
@@ -765,6 +778,9 @@ namespace playpod
 			const PLAYPOD_CALLBACK& pCallBack)
 		{
 			if (!_socket) return;
+
+			//reset last error code
+			std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
 
 			int _len = static_cast<int>(pLenght);
 			//convert c++ int to java int structure
@@ -838,6 +854,9 @@ namespace playpod
 		{
 			if (config::harfs)
 			{
+				//reset last error code
+				std::memset(s_last_error_code, 0, MAX_MESSAGE_SIZE);
+
 				//send using http rest post
 				std::string _result;
 
@@ -1018,4 +1037,5 @@ namespace playpod
 		}
 	};
 }
+
 #endif
