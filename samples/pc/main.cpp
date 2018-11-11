@@ -9,7 +9,7 @@
 #include <thread>
 #include <playpod.hpp>
 
-using namespace playpod;
+using namespace playpod::sdk;
 
 void on_services_ready_callback_handle()
 {
@@ -24,8 +24,15 @@ void on_services_ready_callback_handle()
 	});
 }
 
-int main(int argc, char** argv)
+int APIENTRY wWinMain(
+	HINSTANCE pInstance,
+	HINSTANCE pPrevInstance,
+	LPTSTR plpCmdLine,
+	int pCmdShow)
 {
+	UNREFERENCED_PARAMETER(pPrevInstance);
+	UNREFERENCED_PARAMETER(plpCmdLine);
+
 	asio::io_service _io;
 	on_services_ready_callback = on_services_ready_callback_handle;
 	if (Services::initialize(_io)) return EXIT_FAILURE;
