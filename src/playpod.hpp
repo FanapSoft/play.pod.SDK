@@ -1,8 +1,8 @@
 /*
 	Project			 : play.pod.SDK. Copyright(c) play.pod.land (https://play.pod.land). All rights reserved.
 	Source			 : Please direct any bug to https://github.com/FanapSoft/play.pod.SDK/issues
-	Name			 : main.cpp
-	Description		 : This sample shows how to use play pod services
+	Name			 : playpod.hpp
+	Description		 : declaration of PlayPod services
 */
 
 #ifndef __PLAYPOD_H__
@@ -53,21 +53,8 @@
 //services
 #define PING					"user/ping"
 
-#ifdef _WIN32
+#define URL_GAME_INFO			 "/srv/game/get"
 
-#ifndef WSYS_EXP
-	#ifdef __PLAYPOD__
-		#define PLAYPOD_API __declspec(dllexport)
-	#else
-		#define PLAYPOD_API __declspec(dllimport)
-	#endif
-#endif
-
-#else
-	#ifndef PLAYPOD_API
-	#define PLAYPOD_API //dump
-	#endif
-#endif
 
 static std::once_flag s_once_init;
 static char           s_last_error_code[MAX_MESSAGE_SIZE];
@@ -76,7 +63,7 @@ namespace playpod
 {
 	namespace sdk
 	{
-		extern std::function<void(void)> on_services_ready_callback = nullptr;
+		extern std::function<void(void)> on_services_ready_callback;
 
 		static const char* get_last_error_code()
 		{
@@ -102,27 +89,6 @@ namespace playpod
 			//peer name
 			static const char* ahrrn;
 		};
-
-		const char* config::ssoiau = ("http://" + std::string(SERVER_IP) + "/pages/iap/buy/default.aspx").c_str();
-		bool        config::harfs = false;
-		//use encryption
-		bool        config::ure = false;
-		//use tcp or websocket connection
-		bool        config::utc = true;
-		//peer name
-		const char*	config::ahrrn = "bp.gc.sandbox";
-
-		struct url_data
-		{
-			const char* _uri;
-		};
-
-		struct request_urls
-		{
-			static url_data game_info;
-		};
-
-		url_data request_urls::game_info = url_data{ "/srv/game/get" };
 
 		struct JSONObject
 		{
@@ -987,14 +953,6 @@ namespace playpod
 			static uint64_t									_peer_id;
 		};
 
-		uint64_t										Network::_peer_id = 0;
-		bool											Network::_is_released = false;
-		std::thread*									Network::_thread = nullptr;
-		CURL*											Network::_curl = nullptr;
-		asio::ip::tcp::socket*							Network::_socket = nullptr;
-		bool											Network::_is_ready = false;
-
-
 		// Implement application-level callbacks for the browser process.
 		class cef_app : public CefApp, public CefBrowserProcessHandler 
 		{
@@ -1051,7 +1009,7 @@ namespace playpod
 		struct Services
 		{
 		public:
-			PLAYPOD_API static int initialize(asio::io_service& pIO)
+			static int initialize(asio::io_service& pIO)
 			{
 				int _result = 0;
 				std::call_once(s_once_init, [&]()
@@ -1069,13 +1027,13 @@ namespace playpod
 
 				sprintf(_parameters, "[]");
 
-				async_request(request_urls::game_info, _parameters, pCallBack);
+				async_request(URL_GAME_INFO, _parameters, pCallBack);
 				free(_parameters);
 			}
 
 			template<typename PLAYPOD_CALLBACK>
 			static void async_request(
-				const url_data& pUrlData,
+				const char* pUrlData,
 				char* pParamsData,
 				const PLAYPOD_CALLBACK& pCallBack)
 			{
@@ -1090,7 +1048,7 @@ namespace playpod
 					"\\\\\\\"uri\\\\\\\": \\\\\\\"%s\\\\\\\","
 					"\\\\\\\"messageId\\\\\\\": %d,"
 					"\\\\\\\"expireTime\\\\\\\": %d}",
-					"123e4567-e89b-12d3-a456-426655440000", 0, pParamsData, 3, pUrlData._uri, 1001, 0);
+					"123e4567-e89b-12d3-a456-426655440000", 0, pParamsData, 3, pUrlData, 1001, 0);
 
 				auto _message_vo = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_message_vo,
