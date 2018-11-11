@@ -7,12 +7,16 @@
 *.res
 *.enc
 *.vscode
-/sample/pc/windows/.vs/*
+/samples/pc/windows/.vs/*
+/samples/pc/windows/.vs/play.pod.services.test/v15/*
+/samples/pc/windows/GPUCache/*
 /sample/pc/windows/x64/*
+/samples/pc/windows/x64/Debug/*
 /deps/*
 !/deps/*.zip
 !/deps/cef.zip.001
 !/deps/cef.zip.002
+
 
 
 # Compiled Object files

@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <codecvt>
 #include <string>
+#include <list>
 #include <functional>
 
 //curl
@@ -36,11 +37,14 @@
 
 //cef
 #include <include/cef_app.h>
+#include <include/cef_client.h>
 #include <include/cef_browser.h>
 #include <include/cef_command_line.h>
+#include <include/base/cef_bind.h>
 #include <include/views/cef_browser_view.h>
 #include <include/views/cef_window.h>
 #include <include/wrapper/cef_helpers.h>
+#include <include/wrapper/cef_closure_task.h>
 
 #define APP_ID					"GAME_CENTER_PC"
 #define SERVER_IP				"176.221.69.209:1036"
@@ -96,12 +100,6 @@ namespace playpod
 			{
 				//use rapid json to make json
 				this->_writer = new rapidjson::Writer<rapidjson::StringBuffer>(this->_write_buffer);
-			}
-
-			int from_object(const rapidjson::Value& pValue)
-			{
-				_document.CopyFrom(pValue, _document.GetAllocator());
-				return 0;
 			}
 
 			//https://qiita.com/k2ymg/items/eef3b15eaa27a89353ab
@@ -238,82 +236,82 @@ namespace playpod
 				{
 					if (_document[pKey].IsNull())
 					{
-						return true;
+						return 0;
 					}
 				}
-				return false;
+				return 1;
 			}
 
-			bool get_is_false(const char* pKey)
+			int get_is_false(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsFalse())
 					{
-						return true;
+						return 0;
 					}
 				}
-				return false;
+				return 1;
 			}
 
-			bool get_is_true(const char* pKey)
+			int get_is_true(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsTrue())
 					{
-						return true;
+						return 0;
 					}
 				}
-				return false;
+				return 1;
 			}
 
-			bool get_is_bool(const char* pKey)
+			int get_is_bool(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsBool())
 					{
-						return true;
+						return 0;
 					}
 				}
-				return false;
+				return 1;
 			}
 
-			bool get_is_object(const char* pKey)
+			int get_is_object(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsObject())
 					{
-						return true;
+						return 0;
 					}
 				}
-				return false;
+				return 1;
 			}
 
-			bool get_is_array(const char* pKey)
+			int get_is_array(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsArray())
 					{
-						return true;
+						return 0;
 					}
 				}
-				return false;
+				return 1;
 			}
 
-			bool get_is_number(const char* pKey)
+			int get_is_number(const char* pKey)
 			{
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsNumber())
 					{
-						return true;
+						return 0;
 					}
 				}
-				return false;
+				return 1;
 			}
 
 			int get_value(const char* pKey, bool& pValue)
@@ -418,40 +416,6 @@ namespace playpod
 					}
 				}
 				return 1;
-			}
-
-			int get_array(const char* pKey, JSONObject& pJsonObject)
-			{
-				if (_document.HasMember(pKey))
-				{
-					if (_document[pKey].IsArray())
-					{
-						pJsonObject.from_object(_document[pKey]);
-						return 0;
-					}
-				}
-
-				return 1;
-			}
-
-			int get_array_value(const unsigned int& pIndex, JSONObject& pJsonObject)
-			{
-				if (_document.IsArray())
-				{
-					const auto _size = _document.End() - _document.Begin();
-					if (pIndex < _size)
-					{
-						pJsonObject.from_object(_document[pIndex]);
-						return 0;
-					}
-				}
-
-				return 1;
-			}
-
-			int get_array_size()
-			{
-				return _document.End() - _document.Begin();
 			}
 
 			int release()
@@ -993,22 +957,119 @@ namespace playpod
 			static uint64_t									_peer_id;
 		};
 
+		class cef_handler : public CefClient,
+			public CefDisplayHandler,
+			public CefLifeSpanHandler,
+			public CefLoadHandler {
+		public:
+			explicit cef_handler();
+			~cef_handler();
+
+			// Provide access to the single global instance of this object.
+			static cef_handler* GetInstance();
+			// CefClient methods:
+			virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE
+			{
+				return this;
+			}
+			virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE
+			{
+				return this;
+			}
+			virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE
+			{
+				return this;
+			}
+
+			// CefDisplayHandler methods:
+			virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
+				const CefString& title) OVERRIDE;
+
+			// CefLifeSpanHandler methods:
+			virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
+
+			virtual bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
+
+			virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
+
+			// CefLoadHandler methods:
+			virtual void OnLoadError(CefRefPtr<CefBrowser> browser,
+				CefRefPtr<CefFrame> frame,
+				ErrorCode errorCode,
+				const CefString& errorText,
+				const CefString& failedUrl) OVERRIDE;
+
+			virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
+				CefRefPtr<CefFrame> frame,
+				int httpStatusCode) OVERRIDE;
+			
+			// Request that all existing browser windows close.
+			void CloseAllBrowsers(bool force_close);
+
+			bool IsClosing() const { return is_closing_; }
+
+		private:
+			// Platform-specific implementation.
+			void PlatformTitleChange(CefRefPtr<CefBrowser> browser,
+				const CefString& title);
+
+			// List of existing browser windows. Only accessed on the CEF UI thread.
+			typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
+			BrowserList browser_list_;
+
+			bool is_closing_;
+
+			// Include the default reference counting implementation.
+			IMPLEMENT_REFCOUNTING(cef_handler);
+		};
+
 		// Implement application-level callbacks for the browser process.
-		class cef_app : public CefApp, public CefBrowserProcessHandler
+		class cef_app : public CefApp, public CefBrowserProcessHandler 
 		{
 		public:
-			cef_app()
+			cef_app(){ }
+
+			virtual void OnBeforeCommandLineProcessing(
+				const CefString& pProcessType,
+				CefRefPtr<CefCommandLine> pCommandLine) OVERRIDE
 			{
+				//pCommandLine->AppendSwitch("disable-gpu");
+				//pCommandLine->AppendSwitch("disable-gpu-compositing");
 			}
 
 			//cefBrowserProcessHandler methods:
 			virtual void OnContextInitialized() OVERRIDE
 			{
 				CEF_REQUIRE_UI_THREAD();
+
+				// SimpleHandler implements browser-level callbacks.
+				CefRefPtr<cef_handler> _handler(new cef_handler());
+
+				// Specify CEF browser settings here.
+				CefBrowserSettings browser_settings;
+
+				std::string _url = "https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile";
+
+				// Information used when creating the native window.
+				CefWindowInfo window_info;
+
+#ifdef _WIN32
+				// On Windows we need to specify certain flags that will be passed to
+				// CreateWindowEx().
+				window_info.SetAsPopup(NULL, "PlayPod");
+#endif
+
+				// Create the first browser window.
+				CefBrowserHost::CreateBrowser(
+					window_info,
+					_handler,
+					_url,
+					browser_settings,
+					NULL);
 			}
 
 			//cefApp methods
-			virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE
+			virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE 
 			{
 				return this;
 			}
@@ -1020,7 +1081,7 @@ namespace playpod
 
 		struct OAuth2
 		{
-			int launch(
+			static int launch(
 #ifdef _WIN32
 				HINSTANCE pHInstance
 #endif
@@ -1038,9 +1099,9 @@ namespace playpod
 				CefSettings _settings;
 				_settings.no_sandbox = true;
 
-				//CefRefPtr<SimpleApp> app(new SimpleApp);
-				//CefInitialize(_main_args, _settings, app.get(), NULL);
-
+				CefRefPtr<cef_app> app(new cef_app);
+				CefInitialize(_main_args, _settings, app.get(), NULL);
+				
 				CefRunMessageLoop();
 				CefShutdown();
 			}

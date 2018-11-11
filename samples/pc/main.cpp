@@ -5,8 +5,8 @@
 	Description		 : This sample shows how to use play pod services
 */
 
+#include <windows.h>
 #include <iostream>
-#include <thread>
 #include <playpod.hpp>
 
 using namespace playpod::sdk;
@@ -33,6 +33,8 @@ int APIENTRY wWinMain(
 	UNREFERENCED_PARAMETER(pPrevInstance);
 	UNREFERENCED_PARAMETER(plpCmdLine);
 
+	OAuth2::launch(pInstance);
+	
 	asio::io_service _io;
 	on_services_ready_callback = on_services_ready_callback_handle;
 	if (Services::initialize(_io)) return EXIT_FAILURE;
