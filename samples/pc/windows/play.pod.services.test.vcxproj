@@ -106,7 +106,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(SolutionDir)/../../../deps/curl/lib/windows/x64/;$(SolutionDir)/../../../deps/cef/lib/windows/x64/debug/</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libcurl-d_imp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcurl-d_imp.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

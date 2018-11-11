@@ -11,6 +11,9 @@
 /sample/pc/windows/x64/*
 /deps/*
 !/deps/*.zip
+!/deps/cef.zip.001
+!/deps/cef.zip.002
+
 
 # Compiled Object files
 *.slo

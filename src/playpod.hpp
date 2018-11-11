@@ -35,12 +35,12 @@
 #include <document.h>
 
 //cef
-//#include <include/cef_app.h>
-//#include <include/cef_browser.h>
-//#include <include/cef_command_line.h>
-//#include <include/views/cef_browser_view.h>
-//#include <include/views/cef_window.h>
-//#include <include/wrapper/cef_helpers.h>
+#include <include/cef_app.h>
+#include <include/cef_browser.h>
+#include <include/cef_command_line.h>
+#include <include/views/cef_browser_view.h>
+#include <include/views/cef_window.h>
+#include <include/wrapper/cef_helpers.h>
 
 #define APP_ID					"GAME_CENTER_PC"
 #define SERVER_IP				"176.221.69.209:1036"
@@ -55,7 +55,7 @@
 
 #ifdef _WIN32
 
-#ifndef PLAYPOD_API
+#ifndef WSYS_EXP
 	#ifdef __PLAYPOD__
 		#define PLAYPOD_API __declspec(dllexport)
 	#else
@@ -76,7 +76,7 @@ namespace playpod
 {
 	namespace sdk
 	{
-		PLAYPOD_API extern std::function<void(void)> on_services_ready_callback = nullptr;
+		extern std::function<void(void)> on_services_ready_callback = nullptr;
 
 		static const char* get_last_error_code()
 		{
@@ -92,15 +92,15 @@ namespace playpod
 		struct config
 		{
 			//in app purchase url
-			PLAYPOD_API static const char* ssoiau;
+			static const char* ssoiau;
 			//use http for requests
-			PLAYPOD_API static bool harfs;
+			static bool harfs;
 			//use encryption in requests
-			PLAYPOD_API static bool ure;
+			static bool ure;
 			//use tcp or websocket for connection
-			PLAYPOD_API static bool utc;
+			static bool utc;
 			//peer name
-			PLAYPOD_API static const char* ahrrn;
+			static const char* ahrrn;
 		};
 
 		const char* config::ssoiau = ("http://" + std::string(SERVER_IP) + "/pages/iap/buy/default.aspx").c_str();
@@ -996,57 +996,57 @@ namespace playpod
 
 
 		// Implement application-level callbacks for the browser process.
-//		class cef_app : public CefApp, public CefBrowserProcessHandler 
-//		{
-//		public:
-//			cef_app()
-//			{
-//			}
-//
-//			//cefBrowserProcessHandler methods:
-//			virtual void OnContextInitialized() OVERRIDE
-//			{
-//				CEF_REQUIRE_UI_THREAD();
-//			}
-//
-//			//cefApp methods
-//			virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE 
-//			{
-//				return this;
-//			}
-//
-//		private:
-//			//include the default reference counting implementation.
-//			IMPLEMENT_REFCOUNTING(cef_app);
-//		};
-//
-//		struct OAuth2
-//		{
-//			int launch(
-//#ifdef _WIN32
-//				HINSTANCE pHInstance
-//#endif
-//			)
-//			{
-//				CefEnableHighDPISupport();
-//
-//				CefMainArgs _main_args(pHInstance);
-//				int _exit_code = CefExecuteProcess(_main_args, NULL, NULL);
-//				if (_exit_code >= 0)
-//				{
-//					return _exit_code;
-//				}
-//
-//				CefSettings _settings;
-//				_settings.no_sandbox = true;
-//
-//				//CefRefPtr<SimpleApp> app(new SimpleApp);
-//				//CefInitialize(_main_args, _settings, app.get(), NULL);
-//				
-//				CefRunMessageLoop();
-//				CefShutdown();
-//			}
-//		};
+		class cef_app : public CefApp, public CefBrowserProcessHandler 
+		{
+		public:
+			cef_app()
+			{
+			}
+
+			//cefBrowserProcessHandler methods:
+			virtual void OnContextInitialized() OVERRIDE
+			{
+				CEF_REQUIRE_UI_THREAD();
+			}
+
+			//cefApp methods
+			virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE 
+			{
+				return this;
+			}
+
+		private:
+			//include the default reference counting implementation.
+			IMPLEMENT_REFCOUNTING(cef_app);
+		};
+
+		struct OAuth2
+		{
+			int launch(
+#ifdef _WIN32
+				HINSTANCE pHInstance
+#endif
+			)
+			{
+				CefEnableHighDPISupport();
+
+				CefMainArgs _main_args(pHInstance);
+				int _exit_code = CefExecuteProcess(_main_args, NULL, NULL);
+				if (_exit_code >= 0)
+				{
+					return _exit_code;
+				}
+
+				CefSettings _settings;
+				_settings.no_sandbox = true;
+
+				//CefRefPtr<SimpleApp> app(new SimpleApp);
+				//CefInitialize(_main_args, _settings, app.get(), NULL);
+				
+				CefRunMessageLoop();
+				CefShutdown();
+			}
+		};
 
 		struct Services
 		{
