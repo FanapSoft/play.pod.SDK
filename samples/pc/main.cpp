@@ -9,7 +9,7 @@
 #include <thread>
 #include <playpod.hpp>
 
-using namespace play::pod;
+using namespace playpod;
 
 void on_services_ready_callback_handle()
 {
