@@ -1159,42 +1159,60 @@ namespace playpod
 				return _result;
 			}
 
-			template<typename PLAYPOD_CALLBACK>
-			static void get_games_info(const PLAYPOD_CALLBACK& pCallBack)
+			static std::string get_param_str(
+				_In_z_ const char* pKey,
+				_In_ const int& pValue)
 			{
-				char* _parameters = (char*)malloc(1024);
-				if (!_parameters) return;
-
-				sprintf(_parameters,
-					"[]");
-
-				//sprintf(_parameters,
-				//	"["
-				//	"{ \"name\" : \"size\",		\"value\" : %d },"
-				//	"{ \"name\" : \"offset\",	\"value\" : %d }"
-				//	"]",
-				//	20, 0);
-
-				async_request(URL_GAME_INFO, _parameters, pCallBack);
-				free(_parameters);
+				const auto _type = static_cast<char*>(malloc(1024));
+				sprintf(_type, R"({ \\\"name\\\" : \\\"%s\\\", \\\"value\\\" : %d})", pKey, pValue);
+				const auto _ret = std::string(_type);
+				free(_type);
+				return _ret;
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_top_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pType = 1, const int& pOffset = 0, const int& pSize = 10)
+			static void get_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pOffset = -1, const int& pSize = -1)
 			{
-				char* _parameters = (char*)malloc(1024);
-				if (!_parameters) return;
+				std::string _parameters = "[";
 
-				sprintf(_parameters,
-					"["
-					"{ \"name\" : \"type\",		\"value\" : %d },"
-					"{ \"name\" : \"size\",		\"value\" : %d },"
-					"{ \"name\" : \"offset\",	\"value\" : %d }"
-					"]",
-					pType, pOffset, pSize);
+				if (pSize > 0)
+				{
+					_parameters += get_param_str("size", pSize);
+				}
 
-				async_request(URL_GET_TOP_GAME, _parameters, pCallBack);
-				free(_parameters);
+				if (pOffset > 0)
+				{
+					_parameters += get_param_str("offset", pOffset);
+				}
+
+				_parameters += "]";
+
+				async_request(URL_GAME_INFO, _parameters.c_str(), pCallBack);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_top_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pType = -1, const int& pOffset = -1, const int& pSize = -1)
+			{
+				std::string _parameters = "[";
+
+				if (pType > 0)
+				{
+					_parameters += get_param_str("type", pType);
+				}
+
+				if (pSize > 0)
+				{
+					_parameters += get_param_str("size", pSize);
+				}
+
+				if (pOffset > 0)
+				{
+					_parameters += get_param_str("offset", pOffset);
+				}
+
+				_parameters += "]";
+
+				async_request(URL_GET_TOP_GAME, _parameters.c_str(), pCallBack);
 			}
 
 			template<typename PLAYPOD_CALLBACK>
@@ -1212,7 +1230,7 @@ namespace playpod
 			template<typename PLAYPOD_CALLBACK>
 			static void async_request(
 				const char* pUrlData,
-				char* pParamsData,
+				const char* pParamsData,
 				const PLAYPOD_CALLBACK& pCallBack)
 			{
 				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);

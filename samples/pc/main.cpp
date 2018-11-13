@@ -13,7 +13,7 @@ using namespace playpod::sdk;
 
 void on_services_ready_callback_handle()
 {
-	Services::get_games_info([](JSONObject& pJson)
+	Services::get_lobby([](JSONObject& pJson)
 	{
 		bool _has_error = false;
 		pJson.get_value("HasError", _has_error);
