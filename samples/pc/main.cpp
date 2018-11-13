@@ -13,7 +13,9 @@ using namespace playpod::sdk;
 
 void on_services_ready_callback_handle()
 {
-	Services::get_lobby([](JSONObject& pJson)
+	int _lobby_ids[3] = {21, 22, 23};
+
+	Services::get_lobbies_games([](JSONObject& pJson)
 	{
 		bool _has_error = false;
 		pJson.get_value("HasError", _has_error);
@@ -21,7 +23,7 @@ void on_services_ready_callback_handle()
 		std::cout << pJson.get_is_array("Result") << std::endl;
 		std::string _to_string = pJson.to_string();
 		std::cout << _to_string;
-	});
+	}, _lobby_ids, 3);
 }
 
 int APIENTRY wWinMain(
