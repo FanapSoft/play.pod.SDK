@@ -58,6 +58,8 @@
 #define PING					"user/ping"
 
 #define URL_GAME_INFO			 "/srv/game/get"
+#define URL_GET_LOBBIES			 "/srv/lobby/get"
+#define URL_GET_TOP_GAME		 "/srv/game/top"
 
 
 static std::once_flag s_once_init;
@@ -424,15 +426,12 @@ namespace playpod
 				return 1;
 			}
 
-			int get_array(const char* pKey, JSONObject& pJsonObject)
+			int get_object(const char* pKey, JSONObject& pJsonObject)
 			{
 				if (_document.HasMember(pKey))
 				{
-					if (_document[pKey].IsArray())
-					{
-						pJsonObject.from_object(_document[pKey]);
-						return 0;
-					}
+					pJsonObject.from_object(_document[pKey]);
+					return 0;
 				}
 
 				return 1;
@@ -1042,7 +1041,7 @@ namespace playpod
 			virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
 				CefRefPtr<CefFrame> frame,
 				int httpStatusCode) OVERRIDE;
-			
+
 			// Request that all existing browser windows close.
 			void CloseAllBrowsers(bool force_close);
 
@@ -1064,10 +1063,10 @@ namespace playpod
 		};
 
 		// Implement application-level callbacks for the browser process.
-		class cef_app : public CefApp, public CefBrowserProcessHandler 
+		class cef_app : public CefApp, public CefBrowserProcessHandler
 		{
 		public:
-			cef_app(){ }
+			cef_app() { }
 
 			virtual void OnBeforeCommandLineProcessing(
 				const CefString& pProcessType,
@@ -1109,7 +1108,7 @@ namespace playpod
 			}
 
 			//cefApp methods
-			virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE 
+			virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE
 			{
 				return this;
 			}
@@ -1141,7 +1140,7 @@ namespace playpod
 
 				CefRefPtr<cef_app> app(new cef_app);
 				CefInitialize(_main_args, _settings, app.get(), NULL);
-				
+
 				CefRunMessageLoop();
 				CefShutdown();
 			}
@@ -1166,9 +1165,47 @@ namespace playpod
 				char* _parameters = (char*)malloc(1024);
 				if (!_parameters) return;
 
-				sprintf(_parameters, "[]");
+				sprintf(_parameters,
+					"[]");
+
+				//sprintf(_parameters,
+				//	"["
+				//	"{ \"name\" : \"size\",		\"value\" : %d },"
+				//	"{ \"name\" : \"offset\",	\"value\" : %d }"
+				//	"]",
+				//	20, 0);
 
 				async_request(URL_GAME_INFO, _parameters, pCallBack);
+				free(_parameters);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_top_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pType = 1, const int& pOffset = 0, const int& pSize = 10)
+			{
+				char* _parameters = (char*)malloc(1024);
+				if (!_parameters) return;
+
+				sprintf(_parameters,
+					"["
+					"{ \"name\" : \"type\",		\"value\" : %d },"
+					"{ \"name\" : \"size\",		\"value\" : %d },"
+					"{ \"name\" : \"offset\",	\"value\" : %d }"
+					"]",
+					pType, pOffset, pSize);
+
+				async_request(URL_GET_TOP_GAME, _parameters, pCallBack);
+				free(_parameters);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_lobby(const PLAYPOD_CALLBACK& pCallBack)
+			{
+				char* _parameters = (char*)malloc(1024);
+				if (!_parameters) return;
+
+				sprintf(_parameters, "[]");
+
+				async_request(URL_GET_LOBBIES, _parameters, pCallBack);
 				free(_parameters);
 			}
 
