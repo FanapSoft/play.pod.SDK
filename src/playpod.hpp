@@ -49,7 +49,7 @@
 #define APP_ID					"GAME_CENTER_PC"
 #define SERVER_IP				"176.221.69.209:1036"
 #define SERVER_NAME             "bg.game.msg"
-#define MAX_MESSAGE_SIZE        1024
+#define MAX_MESSAGE_SIZE        2048
 #define ASYNC_SERVER_NAME       "sandbox.pod.land"
 #define ASYNC_SERVER_PORT       "8002"
 #define HTTP_PORT				"8003"
