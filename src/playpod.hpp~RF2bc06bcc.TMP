@@ -57,13 +57,12 @@
 //services
 #define PING					"user/ping"
 
-#define URL_GAME_INFO			"/srv/game/get"
-#define URL_GET_LOBBIES			"/srv/lobby/get"
-#define URL_GET_TOP_GAME		"/srv/game/top"
-#define URL_GET_LOBBY_GAMES		"/srv/game/getbylobby"
-#define URL_GET_GALLERY			"/srv/product/gallery"
-#define URL_GET_RELATED_GAME	"/srv/game/related"
-#define URL_GET_TOP_PLAYERS		"/srv/user/gettopplayers"
+#define URL_GAME_INFO			 "/srv/game/get"
+#define URL_GET_LOBBIES			 "/srv/lobby/get"
+#define URL_GET_TOP_GAME		 "/srv/game/top"
+#define URL_GET_LOBBY_GAMES		 "/srv/game/getbylobby"
+#define URL_GET_GALLERY			 "/srv/product/gallery"
+#define URL_GET_RELATED_GAME	 "/srv/game/related"
 
 
 static std::once_flag s_once_init;
@@ -1287,11 +1286,13 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_related_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pType = -1, const int& pGameId = -1, const int& pOffset = -1, const int& pSize = -1)
+			static void get_related_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pOffset = -1, const int& pSize = -1)
 			{
 				std::string _parameters = "[";
 
 				auto _has_prev = false;
+
+					add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
 
 				if (pSize >= 0)
 					add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
@@ -1299,34 +1300,9 @@ namespace playpod
 				if (pOffset >= 0)
 					add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
 
-				if (pType >= 0)
-					add_object_to_params("type", std::to_string(pType).c_str(), _parameters, _has_prev);
-
-				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
-
 				_parameters += "]";
 
-				async_request(URL_GET_RELATED_GAME, _parameters.c_str(), pCallBack);
-			}
-
-			template<typename PLAYPOD_CALLBACK>
-			static void get_top_players(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pOffset = -1, const int& pSize = -1)
-			{
-				std::string _parameters = "[";
-
-				auto _has_prev = false;
-
-				if (pSize >= 0)
-					add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
-
-				if (pOffset >= 0)
-					add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
-
-				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
-
-				_parameters += "]";
-
-				async_request(URL_GET_TOP_PLAYERS, _parameters.c_str(), pCallBack);
+				async_request(URL_GET_TOP_GAME, _parameters.c_str(), pCallBack);
 			}
 
 

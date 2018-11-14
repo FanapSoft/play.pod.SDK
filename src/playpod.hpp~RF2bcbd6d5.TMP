@@ -1287,7 +1287,7 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_related_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pType = -1, const int& pGameId = -1, const int& pOffset = -1, const int& pSize = -1)
+			static void get_related_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pOffset = -1, const int& pSize = -1)
 			{
 				std::string _parameters = "[";
 
@@ -1298,9 +1298,6 @@ namespace playpod
 
 				if (pOffset >= 0)
 					add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
-
-				if (pType >= 0)
-					add_object_to_params("type", std::to_string(pType).c_str(), _parameters, _has_prev);
 
 				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
 
@@ -1326,7 +1323,7 @@ namespace playpod
 
 				_parameters += "]";
 
-				async_request(URL_GET_TOP_PLAYERS, _parameters.c_str(), pCallBack);
+				async_request(URL_GET_RELATED_GAME, _parameters.c_str(), pCallBack);
 			}
 
 
