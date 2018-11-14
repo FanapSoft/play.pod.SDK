@@ -975,6 +975,14 @@ namespace playpod
 				return _is_ready;
 			}
 
+
+			static std::string	_image;
+			static int			_customer_id;
+			static std::string	_name;
+			static int			_user_id;
+			static std::string	_token;
+			static std::string	_profile_image;
+
 		private:
 			//initialize http request
 			static int initialize_curl()
@@ -1336,18 +1344,20 @@ namespace playpod
 				const char* pParamsData,
 				const PLAYPOD_CALLBACK& pCallBack)
 			{
+				const auto _token_str = Network::_token.empty() ? "null" : Network::_token;
+
 				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_gc_param_data,
 					"{\\\\\\\"remoteAddr\\\\\\\": null,"
 					"\\\\\\\"clientMessageId\\\\\\\":\\\\\\\"%s\\\\\\\","
 					"\\\\\\\"serverKey\\\\\\\": %d,"
-					"\\\\\\\"oneTimeToken\\\\\\\": null,"
+					"\\\\\\\"oneTimeToken\\\\\\\": %s,"
 					"\\\\\\\"parameters\\\\\\\": %s,"
 					"\\\\\\\"msgType\\\\\\\": %d,"
 					"\\\\\\\"uri\\\\\\\": \\\\\\\"%s\\\\\\\","
 					"\\\\\\\"messageId\\\\\\\": %d,"
 					"\\\\\\\"expireTime\\\\\\\": %d}",
-					"123e4567-e89b-12d3-a456-426655440000", 0, pParamsData, 3, pUrlData, 1001, 0);
+					"123e4567-e89b-12d3-a456-426655440000", 0, _token_str.c_str(), pParamsData, 3, pUrlData, 1001, 0);
 
 				auto _message_vo = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_message_vo,

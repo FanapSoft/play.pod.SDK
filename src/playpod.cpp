@@ -34,6 +34,13 @@ CURL*											Network::_curl = nullptr;
 asio::ip::tcp::socket*							Network::_socket = nullptr;
 bool											Network::_is_ready = false;
 
+// User Data 
+std::string										Network::_image;
+int												Network::_customer_id;
+std::string										Network::_name;
+int												Network::_user_id;
+std::string										Network::_token;
+std::string										Network::_profile_image;
 #pragma endregion
 
 #pragma region cef
@@ -139,8 +146,42 @@ class Visitor : public CefStringVisitor
 {
 	void Visit(const CefString& string) OVERRIDE
 	{
-		int i = 0;
-		//std::cout << string;
+		auto _str = string.ToString();
+		const auto _found = _str.find("var resultObject");
+		std::string _result_object;
+		if (_found != std::string::npos)
+		{
+			auto _after_equal = false;
+			for (auto i = _found; i < _str.size(); i++)
+			{
+				if (_str[i] == ';')
+					break;
+
+				if (_after_equal)
+					_result_object += _str[i];
+
+				if (_str[i] == '=')
+					_after_equal = true;
+
+			}
+
+			JSONObject _result_json;
+			_result_json.from_string(_result_object);
+			// After this line not here -> already got json -> pass to network
+
+			JSONObject _content;
+			_result_json.get_object("Content", _content);
+
+			JSONObject _result;
+			_content.get_object("Result", _result);
+
+			_result.get_value("Image", Network::_token);
+			_result.get_value("CustomerID", Network::_customer_id);
+			_result.get_value("Name", Network::_name);
+			_result.get_value("UserID", Network::_user_id);
+			_result.get_value("Token", Network::_token);
+			_result.get_value("ProfileImage", Network::_profile_image);
+		}
 	}
 
 private:
