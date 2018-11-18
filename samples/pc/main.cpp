@@ -15,7 +15,7 @@ void on_services_ready_callback_handle()
 {
 	int _lobby_ids[3] = {21, 22, 23};
 
-	Services::get_top_players([](JSONObject& pJson)
+	Services::get_stream_games_info([](JSONObject& pJson)
 	{
 		bool _has_error = false;
 		pJson.get_value("HasError", _has_error);
@@ -23,7 +23,28 @@ void on_services_ready_callback_handle()
 		std::cout << pJson.get_is_array("Result") << std::endl;
 		std::string _to_string = pJson.to_string();
 		std::cout << _to_string;
-	}, 4997);
+	});
+
+
+	Services::subscribe_default_league_request([](JSONObject& pJson)
+	{
+		bool _has_error = false;
+		pJson.get_value("HasError", _has_error);
+		std::cout << _has_error;
+		std::cout << pJson.get_is_array("Result") << std::endl;
+		std::string _to_string = pJson.to_string();
+		std::cout << _to_string;
+	}, 6591);
+
+	Services::stream_match_id_request([](JSONObject& pJson)
+	{
+		bool _has_error = false;
+		pJson.get_value("HasError", _has_error);
+		std::cout << _has_error;
+		std::cout << pJson.get_is_array("Result") << std::endl;
+		std::string _to_string = pJson.to_string();
+		std::cout << _to_string;
+	}, 6591);
 }
 
 int APIENTRY wWinMain(

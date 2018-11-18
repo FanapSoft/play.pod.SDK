@@ -57,13 +57,15 @@
 //services
 #define PING					"user/ping"
 
-#define URL_GAME_INFO			"/srv/game/get"
-#define URL_GET_LOBBIES			"/srv/lobby/get"
-#define URL_GET_TOP_GAME		"/srv/game/top"
-#define URL_GET_LOBBY_GAMES		"/srv/game/getbylobby"
-#define URL_GET_GALLERY			"/srv/product/gallery"
-#define URL_GET_RELATED_GAME	"/srv/game/related"
-#define URL_GET_TOP_PLAYERS		"/srv/user/gettopplayers"
+#define URL_GAME_INFO			"		/srv/game/get"
+#define URL_GET_LOBBIES					"/srv/lobby/get"
+#define URL_GET_TOP_GAME				"/srv/game/top"
+#define URL_GET_LOBBY_GAMES				"/srv/game/getbylobby"
+#define URL_GET_GALLERY					"/srv/product/gallery"
+#define URL_GET_RELATED_GAME			"/srv/game/related"
+#define URL_GET_TOP_PLAYERS				"/srv/user/gettopplayers"
+#define URL_REQUEST_STREAM_MATCH_ID		"/srv/stream/addmatch"
+#define URL_DEFAULT_LEAUGE_SUBSCRIBE	"/srv/league/enrollDefault"
 
 
 static std::once_flag s_once_init;
@@ -982,6 +984,7 @@ namespace playpod
 			static int			_user_id;
 			static std::string	_token;
 			static std::string	_profile_image;
+			static uint64_t		_peer_id;
 
 		private:
 			//initialize http request
@@ -1007,7 +1010,6 @@ namespace playpod
 			static CURL*									_curl;
 			static asio::ip::tcp::socket*					_socket;
 			static bool										_is_ready;
-			static uint64_t									_peer_id;
 		};
 
 		class cef_handler : public CefClient,
@@ -1199,14 +1201,15 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pOffset = -1, const int& pSize = -1)
+			static void get_stream_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pOffset = -1, const int& pSize = -1)
 			{
 				std::string _parameters = "[";
 
 				auto _has_prev = false;
 
+				add_object_to_params("infrustructure", std::to_string(2).c_str(), _parameters, _has_prev);
+
 				if (pSize >= 0)
-					add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
 
 				if (pOffset >= 0)
 					add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
@@ -1277,35 +1280,15 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_gallery(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pBusinessId)
+			static void get_related_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pType = -1, const int& pGameId = -1, const int& pOffset = 0, const int& pSize = 50)
 			{
 				std::string _parameters = "[";
 
 				auto _has_prev = false;
 
-				auto _product_id_string = "\\\\\\\"" + std::to_string(pGameId) + "\\\\\\\"";
-				auto _business_id_string = "\\\\\\\"" + std::to_string(pBusinessId) + "\\\\\\\"";
+				add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
 
-				add_object_to_params("productId", _product_id_string.c_str(), _parameters, _has_prev);
-				add_object_to_params("businessId", _business_id_string.c_str(), _parameters, _has_prev);
-
-				_parameters += "]";
-
-				async_request(URL_GET_GALLERY, _parameters.c_str(), pCallBack);
-			}
-
-			template<typename PLAYPOD_CALLBACK>
-			static void get_related_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pType = -1, const int& pGameId = -1, const int& pOffset = -1, const int& pSize = -1)
-			{
-				std::string _parameters = "[";
-
-				auto _has_prev = false;
-
-				if (pSize >= 0)
-					add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
-
-				if (pOffset >= 0)
-					add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
+				add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
 
 				if (pType >= 0)
 					add_object_to_params("type", std::to_string(pType).c_str(), _parameters, _has_prev);
@@ -1318,17 +1301,15 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_top_players(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pOffset = -1, const int& pSize = -1)
+			static void get_top_players(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pOffset = 0, const int& pSize = 50)
 			{
 				std::string _parameters = "[";
 
 				auto _has_prev = false;
 
-				if (pSize >= 0)
-					add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
+				add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
 
-				if (pOffset >= 0)
-					add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
+				add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
 
 				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
 
@@ -1336,7 +1317,54 @@ namespace playpod
 
 				async_request(URL_GET_TOP_PLAYERS, _parameters.c_str(), pCallBack);
 			}
+			
+			template<typename PLAYPOD_CALLBACK>
+			static void get_gallery(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pBusinessId)
+			{
+				std::string _parameters = "[";
 
+				auto _has_prev = false;
+
+				add_object_to_params("productId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
+				add_object_to_params("businessId", std::to_string(pBusinessId).c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_GET_GALLERY, _parameters.c_str(), pCallBack);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void stream_match_id_request(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
+
+				add_object_to_params("leagueId", std::to_string(6592).c_str(), _parameters, _has_prev);
+
+				auto _peer_id_str = std::to_string(Network::_peer_id);
+				add_object_to_params("peerIds", _peer_id_str.c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_REQUEST_STREAM_MATCH_ID, _parameters.c_str(), pCallBack);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void subscribe_default_league_request(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_DEFAULT_LEAUGE_SUBSCRIBE, _parameters.c_str(), pCallBack);
+			}
 
 			template<typename PLAYPOD_CALLBACK>
 			static void async_request(
@@ -1344,20 +1372,23 @@ namespace playpod
 				const char* pParamsData,
 				const PLAYPOD_CALLBACK& pCallBack)
 			{
-				const auto _token_str = Network::_token.empty() ? "null" : Network::_token;
+				auto _token_str = Network::_token.empty() ? "null" : Network::_token;
+				_token_str = "1effdd3711a748948ae47a3db6568581"; // TEMP
 
 				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_gc_param_data,
 					"{\\\\\\\"remoteAddr\\\\\\\": null,"
 					"\\\\\\\"clientMessageId\\\\\\\":\\\\\\\"%s\\\\\\\","
 					"\\\\\\\"serverKey\\\\\\\": %d,"
-					"\\\\\\\"oneTimeToken\\\\\\\": %s,"
+					"\\\\\\\"oneTimeToken\\\\\\\": null,"
+					"\\\\\\\"token\\\\\\\": \\\\\\\"%s\\\\\\\","
+					"\\\\\\\"tokenIssuer\\\\\\\": %d,"
 					"\\\\\\\"parameters\\\\\\\": %s,"
 					"\\\\\\\"msgType\\\\\\\": %d,"
 					"\\\\\\\"uri\\\\\\\": \\\\\\\"%s\\\\\\\","
 					"\\\\\\\"messageId\\\\\\\": %d,"
 					"\\\\\\\"expireTime\\\\\\\": %d}",
-					"123e4567-e89b-12d3-a456-426655440000", 0, _token_str.c_str(), pParamsData, 3, pUrlData, 1001, 0);
+					"123e4567-e89b-12d3-a456-426655440000", 0, _token_str.c_str(), 0, pParamsData, 3, pUrlData, 1001, 0);
 
 				auto _message_vo = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_message_vo,
