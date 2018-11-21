@@ -66,6 +66,8 @@
 #define URL_GET_TOP_PLAYERS				"/srv/user/gettopplayers"
 #define URL_REQUEST_STREAM_MATCH_ID		"/srv/stream/addmatch"
 #define URL_DEFAULT_LEAUGE_SUBSCRIBE	"/srv/league/enrollDefault"
+#define URL_FOLLOW_GAME					"/srv/game/follow"
+#define URL_GAME_RATE					"/srv/game/rate"
 
 
 static std::once_flag s_once_init;
@@ -1082,7 +1084,7 @@ namespace playpod
 		class cef_app : public CefApp, public CefBrowserProcessHandler
 		{
 		public:
-			cef_app() { }
+			cef_app(HWND pHwnd) : _hwnd(pHwnd) { }
 
 			virtual void OnBeforeCommandLineProcessing(
 				const CefString& pProcessType,
@@ -1111,6 +1113,7 @@ namespace playpod
 #ifdef _WIN32
 				// On Windows we need to specify certain flags that will be passed to
 				// CreateWindowEx().
+				window_info.SetAsChild(_hwnd, { 0, 0, 500, 500 });
 				window_info.SetAsPopup(NULL, "PlayPod");
 #endif
 
@@ -1131,6 +1134,7 @@ namespace playpod
 
 		private:
 			//include the default reference counting implementation.
+			HWND _hwnd;
 			IMPLEMENT_REFCOUNTING(cef_app);
 		};
 
@@ -1138,7 +1142,8 @@ namespace playpod
 		{
 			static int launch(
 #ifdef _WIN32
-				HINSTANCE pHInstance
+				HINSTANCE pHInstance,
+				HWND pHwnd = nullptr
 #endif
 			)
 			{
@@ -1154,7 +1159,7 @@ namespace playpod
 				CefSettings _settings;
 				_settings.no_sandbox = true;
 
-				CefRefPtr<cef_app> app(new cef_app);
+				CefRefPtr<cef_app> app(new cef_app(pHwnd));
 				CefInitialize(_main_args, _settings, app.get(), NULL);
 
 				CefRunMessageLoop();
@@ -1367,13 +1372,45 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
+			static void follow_game_request(const PLAYPOD_CALLBACK& pCallBack, const int& pBusinessId, const int& pPostId, const bool& pFollow)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("businessId", std::to_string(pBusinessId).c_str(), _parameters, _has_prev);
+				add_object_to_params("postId", std::to_string(pPostId).c_str(), _parameters, _has_prev);
+
+				std::string _unfollow_str = (pFollow) ? "false" : "true";
+				add_object_to_params("disfavorite", _unfollow_str.c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_FOLLOW_GAME, _parameters.c_str(), pCallBack);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void send_game_rate_request(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pRate)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("entityId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
+				add_object_to_params("rate", std::to_string(pRate).c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_GAME_RATE, _parameters.c_str(), pCallBack);
+			}
+			template<typename PLAYPOD_CALLBACK>
 			static void async_request(
 				const char* pUrlData,
 				const char* pParamsData,
 				const PLAYPOD_CALLBACK& pCallBack)
 			{
 				auto _token_str = Network::_token.empty() ? "null" : Network::_token;
-				_token_str = "1effdd3711a748948ae47a3db6568581"; // TEMP
+				_token_str = "7736e5dd341c477893f947dec32070e6"; // TEMP
 
 				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_gc_param_data,
