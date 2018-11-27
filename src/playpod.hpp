@@ -57,7 +57,7 @@
 //services
 #define PING					"user/ping"
 
-#define URL_GAME_INFO			"		/srv/game/get"
+#define URL_GAME_INFO					"/srv/game/get"
 #define URL_GET_LOBBIES					"/srv/lobby/get"
 #define URL_GET_TOP_GAME				"/srv/game/top"
 #define URL_GET_LOBBY_GAMES				"/srv/game/getbylobby"
@@ -1215,6 +1215,7 @@ namespace playpod
 				add_object_to_params("infrustructure", std::to_string(2).c_str(), _parameters, _has_prev);
 
 				if (pSize >= 0)
+					add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
 
 				if (pOffset >= 0)
 					add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
@@ -1390,7 +1391,7 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void send_game_rate_request(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pRate)
+			static void send_game_rate_request(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const double& pRate)
 			{
 				std::string _parameters = "[";
 
@@ -1403,6 +1404,7 @@ namespace playpod
 
 				async_request(URL_GAME_RATE, _parameters.c_str(), pCallBack);
 			}
+
 			template<typename PLAYPOD_CALLBACK>
 			static void async_request(
 				const char* pUrlData,
