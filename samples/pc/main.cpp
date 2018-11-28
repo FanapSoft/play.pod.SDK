@@ -106,8 +106,6 @@ int APIENTRY wWinMain(
 	//CefShutdown();
 
 	//
-	OAuth2::launch(pHInstance);
-
 	asio::io_service _io;
 	on_services_ready_callback = on_services_ready_callback_handle;
 	if (Services::initialize(_io)) return EXIT_FAILURE;

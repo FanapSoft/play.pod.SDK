@@ -29,11 +29,11 @@
 #include <asio.hpp>
 
 //rapid json
-#include <rapidjson/rapidjson.h>
-#include <rapidjson/encodings.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/document.h>
+#include <rapidjson.h>
+#include <encodings.h>
+#include <writer.h>
+#include <stringbuffer.h>
+#include <document.h>
 
 //cef
 #include <include/cef_app.h>
@@ -55,7 +55,7 @@
 #define HTTP_PORT				"8003"
 
 //services
-#define PING					"user/ping"
+#define PING							"user/ping"
 
 #define URL_GAME_INFO					"/srv/game/get"
 #define URL_GET_LOBBIES					"/srv/lobby/get"
@@ -68,6 +68,7 @@
 #define URL_DEFAULT_LEAUGE_SUBSCRIBE	"/srv/league/enrollDefault"
 #define URL_FOLLOW_GAME					"/srv/game/follow"
 #define URL_GAME_RATE					"/srv/game/rate"
+#define URL_LOGOUT						"/srv/user/logout"
 
 
 static std::once_flag s_once_init;
@@ -1448,8 +1449,8 @@ namespace playpod
 				const char* pParamsData,
 				const PLAYPOD_CALLBACK& pCallBack)
 			{
+				//auto _token_str = Network::_token.empty() ? "null" : Network::_token;
 				auto _token_str = Network::_token.empty() ? "null" : Network::_token;
-				_token_str = "7736e5dd341c477893f947dec32070e6"; // TEMP
 
 				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_gc_param_data,

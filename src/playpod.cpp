@@ -144,6 +144,11 @@ void cef_handler::OnLoadError(CefRefPtr<CefBrowser> browser,
 
 class Visitor : public CefStringVisitor
 {
+public:
+	Visitor(cef_handler* pHandler)
+	{
+		this->_handler = pHandler;
+	}
 	void Visit(const CefString& string) OVERRIDE
 	{
 		auto _str = string.ToString();
@@ -173,24 +178,27 @@ class Visitor : public CefStringVisitor
 			_result_json.get_object("Content", _content);
 
 			JSONObject _result;
-			_content.get_object("Result", _result);
-
-			_result.get_value("Image", Network::_token);
-			_result.get_value("CustomerID", Network::_customer_id);
-			_result.get_value("Name", Network::_name);
-			_result.get_value("UserID", Network::_user_id);
-			_result.get_value("Token", Network::_token);
-			_result.get_value("ProfileImage", Network::_profile_image);
+			if (!_content.get_object("Result", _result))
+			{
+				_result.get_value("Image", Network::_token);
+				_result.get_value("CustomerID", Network::_customer_id);
+				_result.get_value("Name", Network::_name);
+				_result.get_value("UserID", Network::_user_id);
+				_result.get_value("Token", Network::_token);
+				_result.get_value("ProfileImage", Network::_profile_image);
+				this->_handler->CloseAllBrowsers(true);
+			}
 		}
 	}
 
 private:
+	cef_handler* _handler;
 	IMPLEMENT_REFCOUNTING(Visitor);
 };
 
 void cef_handler::OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode)
 {
-	frame->GetSource(new Visitor());
+	frame->GetSource(new Visitor(this));
 }
 
 void cef_handler::CloseAllBrowsers(bool force_close) 
