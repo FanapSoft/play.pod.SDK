@@ -29,11 +29,11 @@
 #include <asio.hpp>
 
 //rapid json
-#include <rapidjson.h>
-#include <encodings.h>
-#include <writer.h>
-#include <stringbuffer.h>
-#include <document.h>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/encodings.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/document.h>
 
 //cef
 #include <include/cef_app.h>
@@ -1086,16 +1086,7 @@ namespace playpod
 		public:
 			cef_app(HWND pHwnd) : _hwnd(pHwnd) { }
 
-			virtual void OnBeforeCommandLineProcessing(
-				const CefString& pProcessType,
-				CefRefPtr<CefCommandLine> pCommandLine) OVERRIDE
-			{
-				//pCommandLine->AppendSwitch("disable-gpu");
-				//pCommandLine->AppendSwitch("disable-gpu-compositing");
-			}
-
-			//cefBrowserProcessHandler methods:
-			virtual void OnContextInitialized() OVERRIDE
+			void run()
 			{
 				CEF_REQUIRE_UI_THREAD();
 
@@ -1114,7 +1105,7 @@ namespace playpod
 				// On Windows we need to specify certain flags that will be passed to
 				// CreateWindowEx().
 				window_info.SetAsChild(_hwnd, { 0, 0, 500, 500 });
-				window_info.SetAsPopup(NULL, "PlayPod");
+				window_info.SetAsPopup(_hwnd, "POD Accounts Login");
 #endif
 
 				// Create the first browser window.
@@ -1124,6 +1115,46 @@ namespace playpod
 					_url,
 					browser_settings,
 					NULL);
+			}
+
+			virtual void OnBeforeCommandLineProcessing(
+				const CefString& pProcessType,
+				CefRefPtr<CefCommandLine> pCommandLine) OVERRIDE
+			{
+				pCommandLine->AppendSwitch("disable-gpu");
+				pCommandLine->AppendSwitch("disable-gpu-compositing");
+			}
+
+			//cefBrowserProcessHandler methods:
+			virtual void OnContextInitialized() OVERRIDE
+			{
+//				CEF_REQUIRE_UI_THREAD();
+//
+//				// SimpleHandler implements browser-level callbacks.
+//				CefRefPtr<cef_handler> _handler(new cef_handler());
+//
+//				// Specify CEF browser settings here.
+//				CefBrowserSettings browser_settings;
+//
+//				std::string _url = "https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile";
+//
+//				// Information used when creating the native window.
+//				CefWindowInfo window_info;
+//
+//#ifdef _WIN32
+//				// On Windows we need to specify certain flags that will be passed to
+//				// CreateWindowEx().
+//				window_info.SetAsChild(_hwnd, { 0, 0, 500, 500 });
+//				window_info.SetAsPopup(_hwnd, "POD Accounts Login");
+//#endif
+//
+//				// Create the first browser window.
+//				CefBrowserHost::CreateBrowser(
+//					window_info,
+//					_handler,
+//					_url,
+//					browser_settings,
+//					NULL);
 			}
 
 			//cefApp methods
@@ -1142,28 +1173,34 @@ namespace playpod
 		{
 			static int launch(
 #ifdef _WIN32
-				HINSTANCE pHInstance,
-				HWND pHwnd = nullptr
+				CefMainArgs& pArgs,
+				HWND pHwnd
 #endif
 			)
 			{
-				CefEnableHighDPISupport();
+				//auto _hInstance = GetModuleHandle(NULL);
 
-				CefMainArgs _main_args(pHInstance);
-				int _exit_code = CefExecuteProcess(_main_args, NULL, NULL);
-				if (_exit_code >= 0)
-				{
-					return _exit_code;
-				}
+				//CefEnableHighDPISupport();
 
-				CefSettings _settings;
-				_settings.no_sandbox = true;
+				//CefMainArgs _main_args(_hInstance);
+				//int _exit_code = CefExecuteProcess(_main_args, NULL, NULL);
+				//if (_exit_code >= 0)
+				//{
+				//	return _exit_code;
+				//}
 
-				CefRefPtr<cef_app> app(new cef_app(pHwnd));
-				CefInitialize(_main_args, _settings, app.get(), NULL);
+				//CefSettings _settings;
+				//_settings.no_sandbox = true;
+				//_settings.multi_threaded_message_loop = false;
+				//_settings.external_message_pump = true;
 
-				CefRunMessageLoop();
-				CefShutdown();
+				//CefRefPtr<cef_app> app(new cef_app(pHwnd));
+				//CefInitialize(pArgs, _settings, app.get(), NULL);
+
+				//CefRunMessageLoop();
+				//CefShutdown();
+
+				return 1;
 			}
 		};
 
