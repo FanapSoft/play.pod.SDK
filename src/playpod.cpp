@@ -30,7 +30,7 @@ const char*	config::ahrrn = "bp.gc.sandbox";
 uint64_t										Network::_peer_id = 0;
 bool											Network::_is_released = false;
 std::thread*									Network::_thread = nullptr;
-CURL*											Network::_curl = nullptr;
+wolf::system::w_url*							Network::_url = nullptr;
 asio::ip::tcp::socket*							Network::_socket = nullptr;
 bool											Network::_is_ready = false;
 
@@ -41,6 +41,7 @@ std::string										Network::_name;
 int												Network::_user_id;
 std::string										Network::_token;
 std::string										Network::_profile_image;
+
 #pragma endregion
 
 #pragma region cef

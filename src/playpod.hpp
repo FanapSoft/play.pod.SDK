@@ -12,7 +12,7 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include <thread>
+#include <w_url.h>
 #include <mutex>
 #include <condition_variable>
 #include <stdio.h>
@@ -21,19 +21,16 @@
 #include <list>
 #include <functional>
 
-//curl
-#include <curl/curl.h>
-
 //asio
 #define ASIO_STANDALONE
 #include <asio.hpp>
 
 //rapid json
-#include <rapidjson.h>
-#include <encodings.h>
-#include <writer.h>
-#include <stringbuffer.h>
-#include <document.h>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/encodings.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/document.h>
 
 //cef
 #include <include/cef_app.h>
@@ -497,80 +494,22 @@ namespace playpod
 				websocket
 				http
 			 */
-
-			 //send http request
-			static int send_http_request(const char* pURL, std::string& pResult)
-			{
-				if (!_curl) return 1;
-
-				//reset last error code
-				std::memset(s_last_error_code, '\0', MAX_MESSAGE_SIZE);
-
-				curl_easy_setopt(_curl, CURLOPT_URL, pURL);
-				curl_easy_setopt(_curl, CURLOPT_FOLLOWLOCATION, 1L);
-				curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, _curl_write_callback);
-				curl_easy_setopt(_curl, CURLOPT_WRITEDATA, &pResult);
-				//perform the request
-				auto _result = curl_easy_perform(_curl);
-
-				//check for errors
-				if (_result != CURLE_OK)
-				{
-					sprintf(s_last_error_code, "send_http_request failed: %s\n", curl_easy_strerror(_result));
-					return 1;
-				}
-				return 0;
-			}
-
-			static int send_http_rest_post(const char* pURL, const char* pMessage, size_t pMessageLenght, std::string& pResult)
-			{
-				if (!_curl) return 1;
-
-				//reset last error code
-				std::memset(s_last_error_code, '\0', MAX_MESSAGE_SIZE);
-
-				//set POST url
-				curl_easy_setopt(_curl, CURLOPT_URL, pURL);
-				//now specify the POST data
-				curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, pMessage);
-				curl_easy_setopt(_curl, CURLOPT_POSTFIELDSIZE, pMessageLenght);
-				curl_easy_setopt(_curl, CURLOPT_POST, 1L);
-				curl_easy_setopt(_curl, CURLOPT_FOLLOWLOCATION, 1L);
-				curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, _curl_write_callback);
-				curl_easy_setopt(_curl, CURLOPT_WRITEDATA, &pResult);
-
-				//set http header
-				struct curl_slist* _chunk = NULL;
-				_chunk = curl_slist_append(_chunk, "content-type:application/x-www-form-urlencoded");
-				//_chunk = curl_slist_append(_chunk, "Accept: application/json");
-				curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _chunk);
-
-				//perform the request
-				auto _result = curl_easy_perform(_curl);
-
-				//free chuck
-				curl_slist_free_all(_chunk);
-
-				//check for errors
-				if (_result != CURLE_OK)
-				{
-					sprintf(s_last_error_code, "send_http_rest_post failed: %s\n", curl_easy_strerror(_result));
-					return 1;
-				}
-				return 0;
-			}
-
-			static int initialize_device_register(asio::io_service& pIO)
+			
+			static W_RESULT initialize_device_register(asio::io_service& pIO)
 			{
 				_is_ready = false;
 
-				if (initialize_curl()) return 1;
+				_url = new (std::nothrow) wolf::system::w_url();
+				if (!_url) return W_FAILED;
 
 				//get config
 				std::string _result;
-				send_http_request(
+				if (_url->request_url(
 					("http://" + std::string(SERVER_IP) + "/srv/serviceApi/getConfig").c_str(),
-					_result);
+					_result) == W_FAILED)
+				{
+					return W_FAILED;
+				}
 
 				if (!_result.empty())
 				{
@@ -595,8 +534,11 @@ namespace playpod
 						_result.clear();
 						std::string _http_request = ("http://" + std::string(ASYNC_SERVER_NAME) + ":" + HTTP_PORT +
 							"/register/?action=register&deviceId=" + "40d1448b-d0dd-41ba-f450-168c4c0bf98d" + "&appId=" + APP_ID);
-
-						send_http_request(_http_request.c_str(), _result);
+						
+						if (_url->request_url(_http_request.c_str(), _result) == W_FAILED)
+						{
+							return W_FAILED;
+						}
 
 						if (!_result.empty())
 						{
@@ -606,7 +548,7 @@ namespace playpod
 							if (_json.from_string(_result))
 							{
 								sprintf(s_last_error_code, "could not register device via http request: %s", _http_request);
-								return 1;
+								return W_FAILED;
 							}
 
 							_json.get_value("success", _success);
@@ -632,10 +574,10 @@ namespace playpod
 					}
 					else
 					{
-						int _result = 0;
+						W_RESULT _hr = W_PASSED;
 
 						//we don't need http request anymore
-						destroy_curl();
+						destroy_url();
 
 						char* _device_register_request = (char*)malloc(MAX_MESSAGE_SIZE);
 						sprintf(
@@ -648,7 +590,7 @@ namespace playpod
 							if (initialize_tcp_socket(pIO))
 							{
 								//some problem was happended
-								_result = 1;
+								_hr = W_FAILED;
 							}
 							else
 							{
@@ -664,7 +606,6 @@ namespace playpod
 										return;
 									}
 
-									//TOSO: TESSSSSSSSSSSSSSSSSSSSSSST it
 									std::string _content_str;
 									pJson.get_value("content", _content_str);
 									JSONObject _content_jo;
@@ -708,11 +649,11 @@ namespace playpod
 						//free allocated memory
 						free(_device_register_request);
 
-						return _result;
+						return _hr;
 					}
 				}
 
-				return 0;
+				return W_PASSED;
 			}
 
 			static int initialize_tcp_socket(asio::io_service& pIO)
@@ -907,8 +848,8 @@ namespace playpod
 
 					const std::string _post_url = ("http://" + std::string(ASYNC_SERVER_NAME) + ":" + HTTP_PORT + "/srv/");
 					const std::string _msg = "data=" + std::string(pMessage) + std::string("&peerId=") + std::to_string(Network::_peer_id);
-					send_http_rest_post(_post_url.c_str(), _msg.c_str(), _msg.size(), _result);
-					if (!_result.empty())
+					auto _hr = _url->send_rest_post(_post_url.c_str(), _msg.c_str(), _msg.size(), _result);
+					if (_hr == W_PASSED && !_result.empty())
 					{
 						JSONObject _json;
 						//create json from string
@@ -926,6 +867,11 @@ namespace playpod
 						//clear resources
 						_json.release();
 					}
+					else
+					{
+						sprintf(s_last_error_code,
+							"request %s with following params %s failed", _post_url, _msg);
+					}
 				}
 				else
 				{
@@ -941,6 +887,11 @@ namespace playpod
 				}
 			}
 
+			static W_RESULT request_url(const char* pURL, std::string& pResult)
+			{
+				return _url ? _url->request_url(pURL, pResult) : W_FAILED;
+			}
+
 			static void ping()
 			{
 				if (!is_ready()) return;
@@ -948,12 +899,9 @@ namespace playpod
 				send_async("{}", 2, [](JSONObject& pJson) {});
 			}
 
-			static void destroy_curl()
+			static void destroy_url()
 			{
-				if (_curl)
-				{
-					curl_easy_cleanup(_curl);
-				}
+				SAFE_RELEASE(_url);
 			}
 
 			static void destroy_tcp()
@@ -965,14 +913,14 @@ namespace playpod
 				}
 			}
 
-			static int release()
+			static W_RESULT release()
 			{
-				if (_is_released) return 1;
+				if (_is_released) return W_PASSED;
 
-				destroy_curl();
+				destroy_url();
 				destroy_tcp();
 
-				return 0;
+				return W_PASSED;
 			}
 
 			static bool is_ready()
@@ -990,27 +938,9 @@ namespace playpod
 			static uint64_t		_peer_id;
 
 		private:
-			//initialize http request
-			static int initialize_curl()
-			{
-				_curl = curl_easy_init();
-				if (!_curl) return 1;
-
-				return 0;
-			}
-			static size_t _curl_write_callback(
-				void* pContents,
-				size_t pSize,
-				size_t pNmemb,
-				void* pUserp)
-			{
-				((std::string*)pUserp)->append((char*)pContents, pSize * pNmemb);
-				return pSize * pNmemb;
-			}
-
 			static bool										_is_released;
 			static std::thread*								_thread;
-			static CURL*									_curl;
+			static wolf::system::w_url*						_url;
 			static asio::ip::tcp::socket*					_socket;
 			static bool										_is_ready;
 		};
@@ -1208,16 +1138,20 @@ namespace playpod
 		struct Services
 		{
 		public:
-			static int initialize(asio::io_service& pIO)
+			static W_RESULT initialize(asio::io_service& pIO)
 			{
-				int _result = 0;
+				W_RESULT _result = W_PASSED;
 				std::call_once(s_once_init, [&]()
 				{
 					_result = Network::initialize_device_register(pIO);
 				});
 				return _result;
 			}
-
+			static W_RESULT release()
+			{
+				return Network::release();
+			}
+			
 			static std::string get_param_str(
 				_In_z_ const char* pKey,
 				_In_ const char* pValue)

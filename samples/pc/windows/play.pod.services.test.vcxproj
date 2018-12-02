@@ -23,7 +23,7 @@
     <ProjectGuid>{80E95F51-5694-445F-9267-B9B07B78BBA7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>playpodservicestest</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -76,6 +76,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <GenerateManifest>true</GenerateManifest>
+    <OutDir>$(SolutionDir)/../../../../../WolfSource/Wolf.Engine/bin/win32/$(Platform)/$(Configuration)/</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -101,8 +102,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WIN32;WIN32;_WINDOWS;UNICODE;_UNICODE;CEF_USE_ATL;WIN32_LEAN_AND_MEAN;__STDC_CONSTANT_MACROS;__STDC_FORMAT_MACROS;NOMINMAX;WINVER=0x0601;_WIN32_WINNT=0x601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)/../../../src/;$(SolutionDir)/../../../deps/asio;$(SolutionDir)/../../../deps/curl/include/;$(SolutionDir)/../../../deps/rapidjson;$(SolutionDir)/../../../deps/cef/src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;__WIN32;WIN32;_WINDOWS;UNICODE;_UNICODE;CEF_USE_ATL;WIN32_LEAN_AND_MEAN;__STDC_CONSTANT_MACROS;__STDC_FORMAT_MACROS;NOMINMAX;WINVER=0x0601;_WIN32_WINNT=0x601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)/../../../src/;$(SolutionDir)/../../../deps/cef/src/;$(SolutionDir)/../../../../../WolfSource/Wolf.Engine/engine/src/wolf.system;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
@@ -113,8 +114,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)/../../../deps/curl/lib/windows/x64/;$(SolutionDir)/../../../deps/cef/lib/windows/x64/debug/</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libcurl-d_imp.lib;libcef.lib;libcef_dll_wrapper.lib;comctl32.lib;rpcrt4.lib;shlwapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)/../../../deps/cef/lib/windows/x64/debug/;$(SolutionDir)/../../../../../WolfSource/Wolf.Engine/bin/win32/x64/Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libcef.lib;libcef_dll_wrapper.lib;wolf.system.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <ProjectReference>

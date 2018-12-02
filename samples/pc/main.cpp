@@ -5,10 +5,10 @@
 	Description		 : This sample shows how to use play pod services
 */
 
-#include <windows.h>
-#include <iostream>
+#include <wolf.h>
 #include <playpod.hpp>
 
+using namespace wolf::system;
 using namespace playpod::sdk;
 
 void on_services_ready_callback_handle()
@@ -78,40 +78,58 @@ void on_services_ready_callback_handle()
 	}, 6591);
 }
 
-int APIENTRY wWinMain(
-	HINSTANCE pHInstance,
-	HINSTANCE pPrevInstance,
-	LPTSTR plpCmdLine,
-	int pCmdShow)
+WOLF_MAIN()
 {
-	//UNREFERENCED_PARAMETER(pPrevInstance);
-	//UNREFERENCED_PARAMETER(plpCmdLine);
+	w_logger_config _log_config;
+	_log_config.app_name = L"play.pod.services.test";
+	_log_config.log_path = wolf::system::io::get_current_directoryW();
+#ifdef __WIN32
+	_log_config.log_to_std_out = false;
+#else
+	_log_config.log_to_std_out = true;
+#endif
+	//initialize logger, and log in to the output debug window of visual studio(just for windows) and Log folder inside running directory
+	wolf::logger.initialize(_log_config);
 
-	//CefEnableHighDPISupport();
-
-	//CefMainArgs _main_args(pHInstance);
-	//int _exit_code = CefExecuteProcess(_main_args, NULL, NULL);
-	//if (_exit_code >= 0)
-	//{
-	//	return _exit_code;
-	//}
-
-	//CefSettings _settings;
-	//_settings.no_sandbox = true;
-
-	//CefRefPtr<cef_app> app(new cef_app(nullptr));
-	//CefInitialize(_main_args, _settings, app.get(), NULL);
-
-	//CefRunMessageLoop();
-	//CefShutdown();
-
-	//
 	asio::io_service _io;
 	on_services_ready_callback = on_services_ready_callback_handle;
-	if (Services::initialize(_io)) return EXIT_FAILURE;
+	if (Services::initialize(_io) == W_FAILED) return EXIT_FAILURE;
 	_io.run();
 
-	std::getchar();
+	
+
+	std::vector< std::thread*> _threads;
+	for (size_t i = 0; i < 10; i++)
+	{
+		auto _t = new std::thread([&]()
+		{
+			std::string _result;
+			std::string _address;
+			if (i % 2 == 0)
+			{
+				_address = "http://sandbox.pod.land:8080/nzh/image/?imageId=50101&width=640&height=360&hashCode=167593be6e7-0.23092292405291015";
+			}
+			else
+			{
+				_address = "http://sandbox.pod.land:8080/nzh/image/?imageId=49902&width=640&height=360&hashCode=16734fdbbb2-0.11177657811236619";
+			}
+			
+			wolf::system::w_url _url;
+			_url.request_url(_address.c_str(), _result);
+			_url.release();
+
+			std::cout << _result << std::endl;
+		});
+		_threads.push_back(_t);
+	}
+	
+	while (std::getchar() != '\r')
+	{
+
+	}
+
+	Services::release();
+	wolf::release_heap_data();
 
 	return EXIT_SUCCESS;
 }
