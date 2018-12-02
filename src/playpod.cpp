@@ -22,6 +22,8 @@ bool        config::ure = false;
 bool        config::utc = true;
 //peer name
 const char*	config::ahrrn = "bp.gc.sandbox";
+//business id
+int	config::business_id = 692;
 
 #pragma endregion
 

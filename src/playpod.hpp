@@ -66,6 +66,7 @@
 #define URL_FOLLOW_GAME					"/srv/game/follow"
 #define URL_GAME_RATE					"/srv/game/rate"
 #define URL_LOGOUT						"/srv/user/logout"
+#define URL_GET_NEWS					"/srv/news/get"
 
 
 static std::once_flag s_once_init;
@@ -100,6 +101,8 @@ namespace playpod
 			static bool utc;
 			//peer name
 			static const char* ahrrn;
+			//business id
+			static int business_id;
 		};
 
 		struct JSONObject
@@ -1375,6 +1378,26 @@ namespace playpod
 				_parameters += "]";
 
 				async_request(URL_GAME_RATE, _parameters.c_str(), pCallBack);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_news(const PLAYPOD_CALLBACK& pCallBack, const int& pOffset = -1, const int& pSize = -1)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("businessId", std::to_string(config::business_id).c_str(), _parameters, _has_prev);
+
+				if (pSize > 0)
+					add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
+
+				if (pOffset > 0)
+					add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_GET_NEWS, _parameters.c_str(), pCallBack);
 			}
 
 			template<typename PLAYPOD_CALLBACK>
