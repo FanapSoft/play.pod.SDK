@@ -67,6 +67,7 @@
 #define URL_GAME_RATE					"/srv/game/rate"
 #define URL_LOGOUT						"/srv/user/logout"
 #define URL_GET_NEWS					"/srv/news/get"
+#define URL_GET_GAME_FOLLOWNING			"/srv/game/following"
 
 
 static std::once_flag s_once_init;
@@ -497,7 +498,7 @@ namespace playpod
 				websocket
 				http
 			 */
-			
+
 			static W_RESULT initialize_device_register(asio::io_service& pIO)
 			{
 				_is_ready = false;
@@ -537,7 +538,7 @@ namespace playpod
 						_result.clear();
 						std::string _http_request = ("http://" + std::string(ASYNC_SERVER_NAME) + ":" + HTTP_PORT +
 							"/register/?action=register&deviceId=" + "40d1448b-d0dd-41ba-f450-168c4c0bf98d" + "&appId=" + APP_ID);
-						
+
 						if (_url->request_url(_http_request.c_str(), _result) == W_FAILED)
 						{
 							return W_FAILED;
@@ -1062,33 +1063,33 @@ namespace playpod
 			//cefBrowserProcessHandler methods:
 			virtual void OnContextInitialized() OVERRIDE
 			{
-//				CEF_REQUIRE_UI_THREAD();
-//
-//				// SimpleHandler implements browser-level callbacks.
-//				CefRefPtr<cef_handler> _handler(new cef_handler());
-//
-//				// Specify CEF browser settings here.
-//				CefBrowserSettings browser_settings;
-//
-//				std::string _url = "https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile";
-//
-//				// Information used when creating the native window.
-//				CefWindowInfo window_info;
-//
-//#ifdef _WIN32
-//				// On Windows we need to specify certain flags that will be passed to
-//				// CreateWindowEx().
-//				window_info.SetAsChild(_hwnd, { 0, 0, 500, 500 });
-//				window_info.SetAsPopup(_hwnd, "POD Accounts Login");
-//#endif
-//
-//				// Create the first browser window.
-//				CefBrowserHost::CreateBrowser(
-//					window_info,
-//					_handler,
-//					_url,
-//					browser_settings,
-//					NULL);
+				//				CEF_REQUIRE_UI_THREAD();
+				//
+				//				// SimpleHandler implements browser-level callbacks.
+				//				CefRefPtr<cef_handler> _handler(new cef_handler());
+				//
+				//				// Specify CEF browser settings here.
+				//				CefBrowserSettings browser_settings;
+				//
+				//				std::string _url = "https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile";
+				//
+				//				// Information used when creating the native window.
+				//				CefWindowInfo window_info;
+				//
+				//#ifdef _WIN32
+				//				// On Windows we need to specify certain flags that will be passed to
+				//				// CreateWindowEx().
+				//				window_info.SetAsChild(_hwnd, { 0, 0, 500, 500 });
+				//				window_info.SetAsPopup(_hwnd, "POD Accounts Login");
+				//#endif
+				//
+				//				// Create the first browser window.
+				//				CefBrowserHost::CreateBrowser(
+				//					window_info,
+				//					_handler,
+				//					_url,
+				//					browser_settings,
+				//					NULL);
 			}
 
 			//cefApp methods
@@ -1154,7 +1155,7 @@ namespace playpod
 			{
 				return Network::release();
 			}
-			
+
 			static std::string get_param_str(
 				_In_z_ const char* pKey,
 				_In_ const char* pValue)
@@ -1298,7 +1299,7 @@ namespace playpod
 
 				async_request(URL_GET_TOP_PLAYERS, _parameters.c_str(), pCallBack);
 			}
-			
+
 			template<typename PLAYPOD_CALLBACK>
 			static void get_gallery(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pBusinessId)
 			{
@@ -1378,6 +1379,24 @@ namespace playpod
 				_parameters += "]";
 
 				async_request(URL_GAME_RATE, _parameters.c_str(), pCallBack);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_game_following(const PLAYPOD_CALLBACK& pCallBack, const int& pOffset = 0, const int& pSize = 50)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				if (pSize > 0)
+					add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
+
+				if (pOffset > 0)
+					add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_GET_GAME_FOLLOWNING, _parameters.c_str(), pCallBack);
 			}
 
 			template<typename PLAYPOD_CALLBACK>
