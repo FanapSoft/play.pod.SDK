@@ -27,21 +27,9 @@
 
 //rapid json
 #include <rapidjson/rapidjson.h>
-#include <rapidjson/encodings.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/document.h>
-
-//cef
-#include <include/cef_app.h>
-#include <include/cef_client.h>
-#include <include/cef_browser.h>
-#include <include/cef_command_line.h>
-#include <include/base/cef_bind.h>
-#include <include/views/cef_browser_view.h>
-#include <include/views/cef_window.h>
-#include <include/wrapper/cef_helpers.h>
-#include <include/wrapper/cef_closure_task.h>
 
 #define APP_ID					"GAME_CENTER_PC"
 #define SERVER_IP				"176.221.69.209:1036"
@@ -949,196 +937,6 @@ namespace playpod
 			static bool										_is_ready;
 		};
 
-		class cef_handler : public CefClient,
-			public CefDisplayHandler,
-			public CefLifeSpanHandler,
-			public CefLoadHandler {
-		public:
-			explicit cef_handler();
-			~cef_handler();
-
-			// Provide access to the single global instance of this object.
-			static cef_handler* GetInstance();
-			// CefClient methods:
-			virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE
-			{
-				return this;
-			}
-			virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE
-			{
-				return this;
-			}
-			virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE
-			{
-				return this;
-			}
-
-			// CefDisplayHandler methods:
-			virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
-				const CefString& title) OVERRIDE;
-
-			// CefLifeSpanHandler methods:
-			virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
-
-			virtual bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
-
-			virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
-
-			// CefLoadHandler methods:
-			virtual void OnLoadError(CefRefPtr<CefBrowser> browser,
-				CefRefPtr<CefFrame> frame,
-				ErrorCode errorCode,
-				const CefString& errorText,
-				const CefString& failedUrl) OVERRIDE;
-
-			virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
-				CefRefPtr<CefFrame> frame,
-				int httpStatusCode) OVERRIDE;
-
-			// Request that all existing browser windows close.
-			void CloseAllBrowsers(bool force_close);
-
-			bool IsClosing() const { return is_closing_; }
-
-		private:
-			// Platform-specific implementation.
-			void PlatformTitleChange(CefRefPtr<CefBrowser> browser,
-				const CefString& title);
-
-			// List of existing browser windows. Only accessed on the CEF UI thread.
-			typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
-			BrowserList browser_list_;
-
-			bool is_closing_;
-
-			// Include the default reference counting implementation.
-			IMPLEMENT_REFCOUNTING(cef_handler);
-		};
-
-		// Implement application-level callbacks for the browser process.
-		class cef_app : public CefApp, public CefBrowserProcessHandler
-		{
-		public:
-			cef_app(HWND pHwnd) : _hwnd(pHwnd) { }
-
-			void run()
-			{
-				CEF_REQUIRE_UI_THREAD();
-
-				// SimpleHandler implements browser-level callbacks.
-				CefRefPtr<cef_handler> _handler(new cef_handler());
-
-				// Specify CEF browser settings here.
-				CefBrowserSettings browser_settings;
-
-				std::string _url = "https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile";
-
-				// Information used when creating the native window.
-				CefWindowInfo window_info;
-
-#ifdef _WIN32
-				// On Windows we need to specify certain flags that will be passed to
-				// CreateWindowEx().
-				window_info.SetAsChild(_hwnd, { 0, 0, 500, 500 });
-				window_info.SetAsPopup(_hwnd, "POD Accounts Login");
-#endif
-
-				// Create the first browser window.
-				CefBrowserHost::CreateBrowser(
-					window_info,
-					_handler,
-					_url,
-					browser_settings,
-					NULL);
-			}
-
-			virtual void OnBeforeCommandLineProcessing(
-				const CefString& pProcessType,
-				CefRefPtr<CefCommandLine> pCommandLine) OVERRIDE
-			{
-				pCommandLine->AppendSwitch("disable-gpu");
-				pCommandLine->AppendSwitch("disable-gpu-compositing");
-			}
-
-			//cefBrowserProcessHandler methods:
-			virtual void OnContextInitialized() OVERRIDE
-			{
-				//				CEF_REQUIRE_UI_THREAD();
-				//
-				//				// SimpleHandler implements browser-level callbacks.
-				//				CefRefPtr<cef_handler> _handler(new cef_handler());
-				//
-				//				// Specify CEF browser settings here.
-				//				CefBrowserSettings browser_settings;
-				//
-				//				std::string _url = "https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile";
-				//
-				//				// Information used when creating the native window.
-				//				CefWindowInfo window_info;
-				//
-				//#ifdef _WIN32
-				//				// On Windows we need to specify certain flags that will be passed to
-				//				// CreateWindowEx().
-				//				window_info.SetAsChild(_hwnd, { 0, 0, 500, 500 });
-				//				window_info.SetAsPopup(_hwnd, "POD Accounts Login");
-				//#endif
-				//
-				//				// Create the first browser window.
-				//				CefBrowserHost::CreateBrowser(
-				//					window_info,
-				//					_handler,
-				//					_url,
-				//					browser_settings,
-				//					NULL);
-			}
-
-			//cefApp methods
-			virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE
-			{
-				return this;
-			}
-
-		private:
-			//include the default reference counting implementation.
-			HWND _hwnd;
-			IMPLEMENT_REFCOUNTING(cef_app);
-		};
-
-		struct OAuth2
-		{
-			static int launch(
-#ifdef _WIN32
-				CefMainArgs& pArgs,
-				HWND pHwnd
-#endif
-			)
-			{
-				//auto _hInstance = GetModuleHandle(NULL);
-
-				//CefEnableHighDPISupport();
-
-				//CefMainArgs _main_args(_hInstance);
-				//int _exit_code = CefExecuteProcess(_main_args, NULL, NULL);
-				//if (_exit_code >= 0)
-				//{
-				//	return _exit_code;
-				//}
-
-				//CefSettings _settings;
-				//_settings.no_sandbox = true;
-				//_settings.multi_threaded_message_loop = false;
-				//_settings.external_message_pump = true;
-
-				//CefRefPtr<cef_app> app(new cef_app(pHwnd));
-				//CefInitialize(pArgs, _settings, app.get(), NULL);
-
-				//CefRunMessageLoop();
-				//CefShutdown();
-
-				return 1;
-			}
-		};
-
 		struct Services
 		{
 		public:
@@ -1325,6 +1123,8 @@ namespace playpod
 				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
 
 				add_object_to_params("leagueId", std::to_string(6592).c_str(), _parameters, _has_prev);
+
+				add_object_to_params("clientType", std::to_string(3).c_str(), _parameters, _has_prev);
 
 				auto _peer_id_str = std::to_string(Network::_peer_id);
 				add_object_to_params("peerIds", _peer_id_str.c_str(), _parameters, _has_prev);
