@@ -226,13 +226,13 @@ namespace playpod
 
 			int begin_array()
 			{
-				if (!this->_writer) return 1;
+				if (!this->_writer) return -1;
 				return this->_writer->StartArray() ? 0 : 1;
 			}
 
 			int end_array()
 			{
-				if (!this->_writer) return 1;
+				if (!this->_writer) return -1;
 				return this->_writer->EndArray() ? 0 : 1;
 			}
 

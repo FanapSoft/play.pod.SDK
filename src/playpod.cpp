@@ -5,6 +5,13 @@
 	Description		 : implementation of PlayPod services
 */
 
+//+++++++++++++++++++++++++++++++++++++++
+//+++++++++++++++++++++++++++++++++++++++
+//comment following line for your project
+#include "pch.h"
+//+++++++++++++++++++++++++++++++++++++++
+//+++++++++++++++++++++++++++++++++++++++
+
 #include "playpod.hpp"
 
 using namespace playpod::sdk;
