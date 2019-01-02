@@ -907,6 +907,7 @@ namespace playpod
 
 			static W_RESULT release()
 			{
+				wolf::logger.error("Release Network");
 				if (_is_released) return W_PASSED;
 
 				destroy_url();
@@ -1060,7 +1061,7 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_related_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pType = -1, const int& pGameId = -1, const int& pOffset = 0, const int& pSize = 50)
+			static void get_related_games_info(const PLAYPOD_CALLBACK& pCallBack, const int pType = -1, const int pGameId = -1, const int pOffset = 0, const int& pSize = 50)
 			{
 				std::string _parameters = "[";
 
@@ -1121,8 +1122,6 @@ namespace playpod
 				auto _has_prev = false;
 
 				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
-
-				add_object_to_params("leagueId", std::to_string(6592).c_str(), _parameters, _has_prev);
 
 				add_object_to_params("clientType", std::to_string(3).c_str(), _parameters, _has_prev);
 
@@ -1228,6 +1227,7 @@ namespace playpod
 				//auto _token_str = Network::_token.empty() ? "null" : Network::_token;
 				auto _token_str = Network::_token.empty() ? "null" : Network::_token;
 
+				//TODO: get time for client_meesage_id
 				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_gc_param_data,
 					"{\\\\\\\"remoteAddr\\\\\\\": null,"
@@ -1241,7 +1241,7 @@ namespace playpod
 					"\\\\\\\"uri\\\\\\\": \\\\\\\"%s\\\\\\\","
 					"\\\\\\\"messageId\\\\\\\": %d,"
 					"\\\\\\\"expireTime\\\\\\\": %d}",
-					"123e4567-e89b-12d3-a456-426655440000", 0, _token_str.c_str(), 0, pParamsData, 3, pUrlData, 1001, 0);
+					"123e4567-e89b-12d3-b486-426655440000_GC_PC", 0, _token_str.c_str(), 0, pParamsData, 3, pUrlData, 1001, 0);
 
 				auto _message_vo = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_message_vo,
