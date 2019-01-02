@@ -56,7 +56,9 @@
 #define URL_LOGOUT						"/srv/user/logout"
 #define URL_GET_NEWS					"/srv/news/get"
 #define URL_GET_GAME_FOLLOWNING			"/srv/game/following"
-
+#define URL_GET_USER_PROFILE			"/srv/user/getProfile"
+#define URL_FOLLOW_POST					"/srv/user/follow"
+#define URL_LIKE_POST					"/srv/user/like"
 
 static std::once_flag s_once_init;
 static char           s_last_error_code[MAX_MESSAGE_SIZE];
@@ -1216,6 +1218,61 @@ namespace playpod
 				_parameters += "]";
 
 				async_request(URL_GET_NEWS, _parameters.c_str(), pCallBack);
+			}
+
+			//not tested!!!!!!!!!!!!
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_user_profile(const PLAYPOD_CALLBACK& pCallBack, const int& pUserId = -1, const int& pRefetch = -1) 
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				if (pUserId > 0)
+					add_object_to_params("userId", std::to_string(pUserId), _parameters, _has_prev);
+
+				if (pRefetch > 0)
+					add_object_to_params("refetch", std::to_string(pRefetch), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_GET_NEWS, _parameters.c_str(), pCallBack);
+
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void follow_post_request(const PLAYPOD_CALLBACK& pCallBack, const int& pPostId, const int& pState = true)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("postId", std::to_string(pPostId), _parameters, _has_prev);
+
+				add_object_to_params("disfavorite", std::to_string(!pState), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_FOLLOW_POST, _parameters.c_str(), pCallBack);
+
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void like_post_request(const PLAYPOD_CALLBACK& pCallBack, const int& pPostId, const int& pState = true)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("postId", std::to_string(pPostId), _parameters, _has_prev);
+
+				add_object_to_params("disfavorite", std::to_string(!pState), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_LIKE_POST, _parameters.c_str(), pCallBack);
+
 			}
 
 			template<typename PLAYPOD_CALLBACK>
