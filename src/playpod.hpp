@@ -240,6 +240,7 @@ namespace playpod
 
 			int get_is_null(const char* pKey)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsNull())
@@ -252,6 +253,7 @@ namespace playpod
 
 			bool get_is_false(const char* pKey)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsFalse())
@@ -264,6 +266,7 @@ namespace playpod
 
 			bool get_is_true(const char* pKey)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsTrue())
@@ -276,6 +279,7 @@ namespace playpod
 
 			bool get_is_bool(const char* pKey)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsBool())
@@ -288,6 +292,7 @@ namespace playpod
 
 			bool get_is_object(const char* pKey)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsObject())
@@ -300,6 +305,7 @@ namespace playpod
 
 			bool get_is_array(const char* pKey)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsArray())
@@ -312,6 +318,7 @@ namespace playpod
 
 			bool get_is_number(const char* pKey)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsNumber())
@@ -324,6 +331,7 @@ namespace playpod
 
 			int get_value(const char* pKey, bool& pValue)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsBool())
@@ -337,6 +345,7 @@ namespace playpod
 
 			int get_value(const char* pKey, int& pValue)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsInt())
@@ -350,6 +359,7 @@ namespace playpod
 
 			int get_value(const char* pKey, uint32_t& pValue)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsUint())
@@ -363,6 +373,7 @@ namespace playpod
 
 			int get_value(const char* pKey, int64_t& pValue)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsInt64())
@@ -376,6 +387,7 @@ namespace playpod
 
 			int get_value(const char* pKey, uint64_t& pValue)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsUint64())
@@ -389,6 +401,7 @@ namespace playpod
 
 			int get_value(const char* pKey, double& pValue)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsDouble())
@@ -402,6 +415,7 @@ namespace playpod
 
 			int get_value(const char* pKey, std::string& pValue)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsString())
@@ -415,6 +429,7 @@ namespace playpod
 
 			int get_value(const char* pKey, rapidjson::Value& pValue)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					if (_document[pKey].IsObject())
@@ -428,17 +443,18 @@ namespace playpod
 
 			int get_object(const char* pKey, JSONObject& pJsonObject)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.HasMember(pKey))
 				{
 					pJsonObject.from_object(_document[pKey]);
 					return 0;
 				}
-
 				return 1;
 			}
 
 			int get_array_value(const unsigned int& pIndex, JSONObject& pJsonObject)
 			{
+				if (_document.IsNull()) return 1;
 				if (_document.IsArray())
 				{
 					const auto _size = _document.End() - _document.Begin();
@@ -448,14 +464,13 @@ namespace playpod
 						return 0;
 					}
 				}
-
 				return 1;
 			}
 
 			int get_array_size()
 			{
-				if (!_document.IsArray())
-					return 0;
+				if (_document.IsNull()) return 1;
+				if (!_document.IsArray()) return 0;
 				return _document.End() - _document.Begin();
 			}
 
