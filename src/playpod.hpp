@@ -469,7 +469,7 @@ namespace playpod
 
 			int get_array_size()
 			{
-				if (_document.IsNull()) return 1;
+				if (_document.IsNull()) return 0;
 				if (!_document.IsArray()) return 0;
 				return _document.End() - _document.Begin();
 			}
