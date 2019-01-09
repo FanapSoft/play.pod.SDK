@@ -30,6 +30,7 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/document.h>
+#include <w_logger.h>
 
 #define APP_ID					"GAME_CENTER_PC"
 #define SERVER_IP				"176.221.69.209:1036"
@@ -1235,8 +1236,6 @@ namespace playpod
 				async_request(URL_GET_NEWS, _parameters.c_str(), pCallBack);
 			}
 
-			//not tested!!!!!!!!!!!!
-
 			template<typename PLAYPOD_CALLBACK>
 			static void get_user_profile(const PLAYPOD_CALLBACK& pCallBack, const int& pUserId = -1, const int& pRefetch = -1) 
 			{
@@ -1245,17 +1244,18 @@ namespace playpod
 				auto _has_prev = false;
 
 				if (pUserId > 0)
-					add_object_to_params("userId", std::to_string(pUserId), _parameters, _has_prev);
+					add_object_to_params("userId", std::to_string(pUserId).c_str(), _parameters, _has_prev);
 
 				if (pRefetch > 0)
-					add_object_to_params("refetch", std::to_string(pRefetch), _parameters, _has_prev);
+					add_object_to_params("refetch", std::to_string(pRefetch).c_str(), _parameters, _has_prev);
 
 				_parameters += "]";
 
-				async_request(URL_GET_NEWS, _parameters.c_str(), pCallBack);
+				async_request(URL_GET_USER_PROFILE, _parameters.c_str(), pCallBack);
 
 			}
 
+			//TODO: Not tested!!!!!!!!!!!!
 			template<typename PLAYPOD_CALLBACK>
 			static void follow_post_request(const PLAYPOD_CALLBACK& pCallBack, const int& pPostId, const int& pState = true)
 			{

@@ -15,6 +15,16 @@ void on_services_ready_callback_handle()
 {
 	int _lobby_ids[3] = {21, 22, 23};
 
+	Services::get_user_profile([](JSONObject& pJson)
+	{
+		bool _has_error = false;
+		pJson.get_value("HasError", _has_error);
+		std::cout << _has_error;
+		std::cout << pJson.get_is_array("Result") << std::endl;
+		std::string _to_string = pJson.to_string();
+		std::cout << _to_string;
+	});
+
 	Services::get_top_games_info([](JSONObject& pJson)
 	{
 		bool _has_error = false;
