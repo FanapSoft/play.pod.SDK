@@ -1357,7 +1357,7 @@ namespace playpod
 				const int& pRequestId, 
 				const int& pRejectReasonType = -1, 
 				const std::string& pRejectMessage = "",
-				const reject_message pRejectMessageMap = reject_message_map()) 
+				const reject_message_map pRejectMessageMap = reject_message_map()) 
 			{
 				bool state = true;
 
@@ -1430,6 +1430,9 @@ namespace playpod
 
 				async_request(URL_GET_USER_ACHIEVEMENT_DETAIL, _parameters.c_str(), pCallBack);
 			}
+
+			/*template<typename PLAYPOD_CALLBACK>
+			static void get_user_achievement_detail(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pSize = 50, const int& pOffset = 0, const int& pRanktype = -1)*/
 
 			template<typename PLAYPOD_CALLBACK>
 			static void async_request(
