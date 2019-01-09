@@ -967,10 +967,10 @@ namespace playpod
 			static W_RESULT initialize(asio::io_service& pIO)
 			{
 				W_RESULT _result = W_PASSED;
-				std::call_once(s_once_init, [&]()
-				{
+				//std::call_once(s_once_init, [&]()
+				//{
 					_result = Network::initialize_device_register(pIO);
-				});
+				//});
 				return _result;
 			}
 			static W_RESULT release()
