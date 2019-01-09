@@ -60,6 +60,11 @@
 #define URL_GET_USER_PROFILE			"/srv/user/getProfile"
 #define URL_FOLLOW_POST					"/srv/user/follow"
 #define URL_LIKE_POST					"/srv/user/like"
+#define URL_GET_ONLINE_INFO				"/srv/game/onlineinfo"
+#define URL_GET_FILE_INFO				"/srv/game/fileinfo"	
+#define URL_MATCH_REQUEST_RESPONSE		"/srv/match/requestresult"
+#define URL_GET_USER_ACHIEVEMENTS		"/srv/user/achievements"
+#define URL_GET_USER_ACHIEVEMENT_DETAIL	"/srv/user/achievementdetails"
 
 static std::once_flag s_once_init;
 static char           s_last_error_code[MAX_MESSAGE_SIZE];
@@ -1263,9 +1268,9 @@ namespace playpod
 
 				auto _has_prev = false;
 
-				add_object_to_params("postId", std::to_string(pPostId), _parameters, _has_prev);
+				add_object_to_params("postId", std::to_string(pPostId).c_str(), _parameters, _has_prev);
 
-				add_object_to_params("disfavorite", std::to_string(!pState), _parameters, _has_prev);
+				add_object_to_params("disfavorite", std::to_string(!pState).c_str(), _parameters, _has_prev);
 
 				_parameters += "]";
 
@@ -1280,14 +1285,150 @@ namespace playpod
 
 				auto _has_prev = false;
 
-				add_object_to_params("postId", std::to_string(pPostId), _parameters, _has_prev);
+				add_object_to_params("postId", std::to_string(pPostId).c_str(), _parameters, _has_prev);
 
-				add_object_to_params("disfavorite", std::to_string(!pState), _parameters, _has_prev);
+				add_object_to_params("disfavorite", std::to_string(!pState).c_str(), _parameters, _has_prev);
 
 				_parameters += "]";
 
 				async_request(URL_LIKE_POST, _parameters.c_str(), pCallBack);
 
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_online_info(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_GET_ONLINE_INFO, _parameters.c_str(), pCallBack);
+							
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_file_info(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId)
+			{
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_GET_FILE_INFO, _parameters.c_str(), pCallBack);
+
+			}
+
+			struct reject_message_map
+			{
+				std::string user_not_accept;
+				std::string app_not_installed;
+				std::string user_version_conflict;
+				std::string user_is_busy;
+				reject_message_map() :
+					user_not_accept(""), app_not_installed(""), user_version_conflict(""), user_is_busy("") {}
+			};
+
+			std::string get_reject_msg(const int& type, const reject_message_map& rmm) 
+			{
+				switch (type)
+				{
+				case 3:
+					return rmm.user_not_accept;
+				case 4:
+					return rmm.app_not_installed;
+				case 5:
+					return rmm.user_version_conflict;
+				case 6:
+					return rmm.user_is_busy;
+				}
+
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void match_request_response(
+				const PLAYPOD_CALLBACK& pCallBack, 
+				const int& pRequestId, 
+				const int& pRejectReasonType = -1, 
+				const std::string& pRejectMessage = "",
+				const reject_message pRejectMessageMap = reject_message_map()) 
+			{
+				bool state = true;
+
+				std::string _parameters = "[";
+
+				auto _has_prev = false;
+
+				add_object_to_params("requestId", std::to_string(pRequestId).c_str(), _parameters, _has_prev);
+
+				std::string _peer_id = std::to_string(Network::_peer_id);
+
+				add_object_to_params("sessionId", std::to_string(_peer_id).c_str(), _parameters, _has_prev);
+
+				if (pRejectReasonType != -1) 
+				{
+					state = false;
+
+					add_object_to_params("rejectReasonType", std::to_string(pRejectReasonType).c_str(), _parameters, _has_prev);
+				
+					std::string _reject_mesaage = pRejectMessage.size() > 0 ? pRejectMessage : get_reject_msg(pRejectReasonType, pRejectMessageMap);
+
+					add_object_to_params("rejectMessage", _reject_mesaage.c_str(), _parameters, _has_prev);
+
+				}
+
+				add_object_to_params("result", (state ? "true" : "false"), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_MATCH_REQUEST_RESPONSE, _parameters.c_str(), pCallBack);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_user_achievements(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pType = -1, const int& pUserId = -1) 
+			{
+				std::string _parameters = "[";
+
+				bool _has_prev = false;
+
+				if (pGameId != -1)
+					add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
+				if (pType != -1)
+					add_object_to_params("type", std::to_string(pType).c_str(), _parameters, _has_prev);
+				if (pGameId != -1)
+					add_object_to_params("userId", std::to_string(pUserId).c_str(), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_GET_USER_ACHIEVEMENTS, _parameters.c_str(), pCallBack);
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void get_user_achievement_detail(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pSize = 50, const int& pOffset = 0, const int& pRanktype = -1) 
+			{
+				std::string _parameters = "[";
+
+				bool _has_prev = false;
+
+				add_object_to_params("size", std::to_string(pSize), _parameters, _has_prev);
+
+				add_object_to_params("offset", std::to_string(pOffset), _parameters, _has_prev);
+
+				if (pGameId != -1)
+					add_object_to_params("gameId", std::to_string(pGameId), _parameters, _has_prev);
+
+				if (pRanktype != -1)
+					add_object_to_params("rankType", std::to_string(pRanktype), _parameters, _has_prev);
+
+				_parameters += "]";
+
+				async_request(URL_GET_USER_ACHIEVEMENT_DETAIL, _parameters.c_str(), pCallBack);
 			}
 
 			template<typename PLAYPOD_CALLBACK>
