@@ -2016,7 +2016,7 @@ namespace playpod
 				const int& pGameId = -1,
 				const int& pItemId = -1,
 				const int& pPackId = -1,
-				const std::string& pNameFilter,
+				const std::string& pNameFilter = "",
 				const int& pSize = 10,
 				const int& pOffset = 0)
 			{
@@ -2181,7 +2181,7 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_time_line(const PLAYPOD_CALLBACK& pCallBack, const int& pUserId = -1, const int& pSize=20, const int& pOffset=0)
+			static void get_time_line(const PLAYPOD_CALLBACK& pCallBack, const int& pUserId = -1, const int& pSize = 20, const int& pOffset = 0)
 			{
 				std::string _parameters = "[";
 
