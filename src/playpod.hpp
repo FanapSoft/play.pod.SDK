@@ -1112,6 +1112,56 @@ namespace playpod
 				pHasPrev = true;
 			}
 
+			static bool is_string_ip_number(_In_z_	std::string pStr)
+			{
+				if (pStr.size() > 4 || pStr.empty())
+					return false;
+				if (pStr.size() > 1 && pStr[0] == '0')
+					return false;
+
+				auto _num = 0, _mul = 1;
+
+				while (!pStr.empty()) 
+				{
+					const auto _c = pStr.back();
+					_num += _mul * int(_c - '0');
+					_mul *= 10;
+					pStr.pop_back();
+
+				}
+				return (_num < 256 && _num >= 0);
+			}
+
+			static bool is_string_format_ip(_In_z_	const std::string& pStr)
+			{
+				auto _cnt = 0;
+				std::string _last;
+
+				for (auto _cur : pStr)
+				{
+					if (_cur < '0' || _cur > '9')
+					{
+						if (_cur != '.')
+							return false;
+
+						if (!is_string_ip_number(_last))
+							return false;
+
+						_last.clear();
+						_cnt++;
+						continue;
+					}
+					_last.push_back(_cur);
+				}
+
+				if (!is_string_ip_number(_last))
+					return false;
+				if (_cnt != 3)
+					return false;
+
+				return true;
+			}
+
 			template<typename PLAYPOD_CALLBACK>
 			static void get_stream_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pOffset = -1, const int& pSize = -1)
 			{
@@ -1729,6 +1779,7 @@ namespace playpod
 				async_request(URL_ONLINE_USER, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_top_score(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pLeagueId = -1, const int& pIsGlobal = -1)
 			{
@@ -1749,6 +1800,7 @@ namespace playpod
 				async_request(URL_TOP_SCORE, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_latest_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pSize = 30, const int& pOffset = 0)
 			{
