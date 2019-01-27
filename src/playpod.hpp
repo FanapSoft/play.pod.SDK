@@ -2548,7 +2548,7 @@ namespace playpod
 			{
 
 				//auto _token_str = Network::_token.empty() ? "null" : Network::_token;
-				auto _token_str = Network::_token.empty() ? "d499ead7c9c14c80a34f289b2bc725e7" : Network::_token;
+				auto _token_str = Network::_token.empty() ? "null" : Network::_token;
 				//TODO: get time for client_meesage_id
 				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_gc_param_data,
