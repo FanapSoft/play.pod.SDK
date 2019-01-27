@@ -152,6 +152,12 @@ namespace playpod
 			static const char* ahrrn;
 			//business id
 			static int business_id;
+			//pc dl link
+			static std::string palvdl;
+			//pc change log
+			static std::string palvcl;
+			//pc version
+			static std::string palv;
 		};
 
 		struct JSONObject
@@ -626,15 +632,34 @@ namespace playpod
 				{
 					JSONObject _json;
 					_json.from_string(_result);
+
 					//get following data for config
-					_json.get_value("harfs", config::harfs);
-					_json.get_value("ure", config::ure);
-					_json.get_value("utc", config::utc);
 					_json.release();
 
+					JSONObject _result_json;
+					if(!_json.get_object("Result", _result_json))
+					{
+						JSONObject _config_json;	
+						
+						if (!_result_json.get_object("config", _config_json))
+						{
+							_config_json.get_value("harfs", config::harfs);
+							_config_json.get_value("ure", config::ure);
+							_config_json.get_value("utc", config::utc);
+							_config_json.get_value("palvdl", config::palvdl);
+							_config_json.get_value("palvcl", config::palvcl);
+							_config_json.get_value("palv", config::palv);
+						}
+						else
+						{
+							wolf::logger.error("DeviceRegister \"content\" object doesn't exist in json");
+						}
+					}
+					else
+					{
+						wolf::logger.error("DeviceRegister \"result\" object doesn't exist in json");
+					}
 
-					//TODO: hack
-					//force to use http
 					config::harfs = true;
 
 					//reset last error code
@@ -655,6 +680,7 @@ namespace playpod
 						{
 							bool _success = false;
 							std::string _content_value;
+
 							JSONObject _json;
 							if (_json.from_string(_result))
 							{

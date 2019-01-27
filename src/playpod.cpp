@@ -31,6 +31,12 @@ bool        config::utc = true;
 const char*	config::ahrrn = "bp.gc.sandbox";
 //business id
 int	config::business_id = 692;
+//pc dl link
+std::string config::palvdl;
+//pc change log
+std::string config::palvcl;
+//pc version
+std::string config::palv;
 
 #pragma endregion
 
