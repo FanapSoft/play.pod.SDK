@@ -1,4 +1,6 @@
 /*
+/*
+	Project			 : play.pod.SDK. Copyright(c) play.pod.land (https://play.pod.land). All rights reserved.
 	Project			 : play.pod.SDK. Copyright(c) play.pod.land (https://play.pod.land). All rights reserved.
 	Source			 : Please direct any bug to https://github.com/FanapSoft/play.pod.SDK/issues
 	Name			 : playpod.hpp
@@ -1348,6 +1350,7 @@ namespace playpod
 				async_request(URL_GET_NEWS, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_user_profile(const PLAYPOD_CALLBACK& pCallBack, const int& pUserId = -1, const int& pRefetch = -1)
 			{
@@ -1367,8 +1370,7 @@ namespace playpod
 
 			}
 
-			//TODO: Not tested!!!!!!!!!!!!
-
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_online_info(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId)
 			{
@@ -1384,6 +1386,7 @@ namespace playpod
 
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_file_info(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId)
 			{
@@ -1399,6 +1402,7 @@ namespace playpod
 
 			}
 
+			//TODO: not tested
 			struct reject_message_map
 			{
 				std::string user_not_accept;
@@ -1466,6 +1470,7 @@ namespace playpod
 				async_request(URL_MATCH_REQUEST_RESPONSE, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_user_achievements(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pType = -1, const int& pUserId = -1)
 			{
@@ -1477,7 +1482,7 @@ namespace playpod
 					add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
 				if (pType != -1)
 					add_object_to_params("type", std::to_string(pType).c_str(), _parameters, _has_prev);
-				if (pGameId != -1)
+				if (pUserId != -1)
 					add_object_to_params("userId", std::to_string(pUserId).c_str(), _parameters, _has_prev);
 
 				_parameters += "]";
@@ -1485,6 +1490,7 @@ namespace playpod
 				async_request(URL_USER_ACHIEVEMENTS, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_user_achievement_detail(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pSize = 50, const int& pOffset = 0, const int& pRanktype = -1)
 			{
@@ -1507,6 +1513,7 @@ namespace playpod
 				async_request(URL_USER_ACHIEVEMENT_DETAIL, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_user_game_points(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pSize = 50, const int& pOffset = 0)
 			{
@@ -1526,6 +1533,7 @@ namespace playpod
 				async_request(URL_USER_GAME_POINTS, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_comment_list(const PLAYPOD_CALLBACK& pCallBack, const int& pPostId, const int& pSize = 20, const int& pOffset = 0)
 			{
@@ -1544,6 +1552,7 @@ namespace playpod
 				async_request(URL_GET_COMMENT_LIST, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: not tested
 			template<typename PLAYPOD_CALLBACK>
 			static void add_game_comment_request(const PLAYPOD_CALLBACK& pCallBack, const int& pPostId, const std::string& pText)
 			{
@@ -1555,11 +1564,14 @@ namespace playpod
 
 				add_object_to_params("comment", pText.c_str(), _parameters, _has_prev);
 
-				_parameters = "]";
+				_parameters += "]";
+
+				_parameters = "[{\\\"name\\\":\\\"postId\\\",\\\"value\\\":\\\"4701\\\"},{\\\"name\\\":\\\"comment\\\",\\\"value\\\":\\\"hey\\\\n\\\"}]";
 
 				async_request(URL_ADD_GAME_COMMENT, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_received_friendship_request(const PLAYPOD_CALLBACK& pCallBack, const int& pStatus = -1, const int& pSize = 20, const int& pOffset = 0)
 			{
@@ -1579,6 +1591,7 @@ namespace playpod
 				async_request(URL_RECEIVED_FRIENDSHIP_REQUEST, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_sent_friendship_request(const PLAYPOD_CALLBACK& pCallBack, const int& pStatus = -1, const int& pSize = 20, const int& pOffset = 0, const int& pUserId = -1)
 			{
@@ -1601,6 +1614,7 @@ namespace playpod
 				async_request(URL_SENT_FRIENDSHIP_REQUEST, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void friendship_request(const PLAYPOD_CALLBACK& pCallBack, const int& pToUserId)
 			{
@@ -1615,6 +1629,15 @@ namespace playpod
 				async_request(URL_FRIENDSHIP_REQUEST, _parameters.c_str(), pCallBack);
 			}
 
+			
+			/**
+			 * \brief 
+			 * \tparam PLAYPOD_CALLBACK 
+			 * \param pCallBack 
+			 * \param pRequestId 
+			 * \param pReply (1:accept	2:deny	3:deny and block)
+			*/
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void reply_friendship_request(const PLAYPOD_CALLBACK& pCallBack, const int& pRequestId, const int& pReply)
 			{
@@ -1631,6 +1654,7 @@ namespace playpod
 				async_request(URL_REPLY_FRIENDSHIP_REQUEST, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void cancel_friendship_request(const PLAYPOD_CALLBACK& pCallBack, const int& pRequestId)
 			{
@@ -1646,6 +1670,7 @@ namespace playpod
 
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_user_friends(const PLAYPOD_CALLBACK& pCallBack, const std::string& pName = "", const int& pSize = 20, const int& pOffset = 0)
 			{
@@ -1665,6 +1690,7 @@ namespace playpod
 				async_request(URL_USER_FRIENDS, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: not tested
 			template<typename PLAYPOD_CALLBACK>
 			static void remove_friend(const PLAYPOD_CALLBACK& pCallBack, const int& pId)
 			{
@@ -1679,6 +1705,7 @@ namespace playpod
 				async_request(URL_REMOVE_FRIEND_REQUEST, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_online_user(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pLeagueId, const int& pSize = 10, const int& pOffset = 0, const std::string& pFilter = "")
 			{
@@ -1703,7 +1730,7 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_top_score(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pLeagueId = -1, const bool& pIsGlobal = -1)
+			static void get_top_score(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pLeagueId = -1, const int& pIsGlobal = -1)
 			{
 				std::string _parameters = "[";
 
@@ -1715,7 +1742,7 @@ namespace playpod
 					add_object_to_params("leagueId", std::to_string(pLeagueId).c_str(), _parameters, _has_prev);
 
 				if (pIsGlobal != -1)
-					add_object_to_params("isGlobal", std::to_string(pIsGlobal).c_str(), _parameters, _has_prev);
+					add_object_to_params("isGlobal", (pIsGlobal ? "true" : "false"), _parameters, _has_prev);
 
 				_parameters += "]";
 
@@ -2521,7 +2548,7 @@ namespace playpod
 			{
 
 				//auto _token_str = Network::_token.empty() ? "null" : Network::_token;
-				auto _token_str = Network::_token.empty() ? "null" : Network::_token;
+				auto _token_str = Network::_token.empty() ? "d499ead7c9c14c80a34f289b2bc725e7" : Network::_token;
 				//TODO: get time for client_meesage_id
 				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_gc_param_data,
