@@ -1188,6 +1188,41 @@ namespace playpod
 				return true;
 			}
 
+			static std::vector<int> get_version_from_string(_In_z_	const std::string& pStr)
+			{
+				auto _cnt = 0;
+				std::string _last;
+
+				auto _ret = std::vector<int>();
+
+				for (auto _cur : pStr)
+				{
+					if (_cur < '0' || _cur > '9')
+					{
+						if (_cur != '.')
+							continue;
+
+						int _cur;
+						sscanf(_last.c_str(), "%d", &_cur);
+						_ret.push_back(_cur);
+						
+						_last.clear();
+
+						continue;
+					}
+					_last.push_back(_cur);
+				}
+
+				if (!_last.empty())
+				{
+					int _cur;
+					sscanf(_last.c_str(), "%d", &_cur);
+					_ret.push_back(_cur);
+				}
+
+				return _ret;
+			}
+
 			template<typename PLAYPOD_CALLBACK>
 			static void get_stream_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pOffset = -1, const int& pSize = -1)
 			{
@@ -1843,6 +1878,7 @@ namespace playpod
 				async_request(URL_GET_LATEST_GAME, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: not tested
 			template<typename PLAYPOD_CALLBACK>
 			static void search_user_request(const PLAYPOD_CALLBACK& pCallBack, const std::string& pName, const int& pSize = 5, const int& pOffset = 0)
 			{
@@ -1861,6 +1897,7 @@ namespace playpod
 				async_request(URL_SEARCH_USER, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void change_visibility_request(const PLAYPOD_CALLBACK& pCallBack) {
 				std::string _parameters = "[";
