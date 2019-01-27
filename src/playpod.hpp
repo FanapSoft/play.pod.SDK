@@ -1911,6 +1911,7 @@ namespace playpod
 				async_request(URL_INVISIBLE, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: test later
 			template<typename PLAYPOD_CALLBACK>
 			static void follow_post_request(const PLAYPOD_CALLBACK& pCallBack, const int& pPostId, const bool& pState = true)
 			{
@@ -1927,6 +1928,7 @@ namespace playpod
 				async_request(URL_FOLLOW_POST, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: test later
 			template<typename PLAYPOD_CALLBACK>
 			static void like_post_request(const PLAYPOD_CALLBACK& pCallBack, const int& pPostId, const bool& pState = true)
 			{
@@ -1943,6 +1945,7 @@ namespace playpod
 				async_request(URL_LIKE_POST, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: not tested
 			template<typename PLAYPOD_CALLBACK>
 			static void match_request(
 				const PLAYPOD_CALLBACK& pCallBack,
@@ -1984,9 +1987,10 @@ namespace playpod
 
 				_parameters += "]";
 
-				async_request(_request_url, _parameters.c_str(), pCallBack);
+				async_request(_request_url.c_str(), _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void cancel_match_request(const PLAYPOD_CALLBACK& pCallBack, const int& pRequestId)
 			{
@@ -2002,6 +2006,7 @@ namespace playpod
 
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void match_id_request(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pLeagueId)
 			{
@@ -2019,6 +2024,7 @@ namespace playpod
 
 			}
 
+			//TODO: #######################
 			template<typename PLAYPOD_CALLBACK>
 			static void get_leagues_info(
 				const PLAYPOD_CALLBACK& pCallBack,
@@ -2045,7 +2051,7 @@ namespace playpod
 
 			}
 
-
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_related_leagues_info(const PLAYPOD_CALLBACK& pCallBack, const int& pLeagueId, const int& pType = -1, const int& pSize = 10, const int& pOffset = 0)
 			{
@@ -2067,6 +2073,7 @@ namespace playpod
 				async_request(URL_GET_RELATED_LEAGUE, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_top_leagues_info(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pType = -1, const int& pSize = 10, const int& pOffset = 0)
 			{
@@ -2089,6 +2096,7 @@ namespace playpod
 				async_request(URL_GET_TOP_LEAGUE, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_latest_leagues_info(const PLAYPOD_CALLBACK& pCallBack, const int& pSize = 10, const int& pOffset = 0)
 			{
@@ -2106,6 +2114,7 @@ namespace playpod
 
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_league_members(
 				const PLAYPOD_CALLBACK& pCallBack,
@@ -2136,6 +2145,7 @@ namespace playpod
 				async_request(URL_LEAGUE_MEMBERS, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_table_data(const PLAYPOD_CALLBACK& pCallBack, const int& pLeagueId, const int& pRangeType = -1)
 			{
@@ -2153,6 +2163,7 @@ namespace playpod
 				async_request(URL_TABLE, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void quick_match_request(const PLAYPOD_CALLBACK& pCallBack, const int& pLeagueId)
 			{
@@ -2169,6 +2180,7 @@ namespace playpod
 				async_request(URL_REQUEST_QUICK_MATCH, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void cancel_quick_match_request(const PLAYPOD_CALLBACK& pCallBack, const int& pLeagueId)
 			{
@@ -2185,6 +2197,7 @@ namespace playpod
 				async_request(URL_CANCEL_QUICK_MATCH, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_league_awards(const PLAYPOD_CALLBACK& pCallBack, const int& pLeagueId)
 			{
@@ -2200,7 +2213,7 @@ namespace playpod
 			}
 
 
-
+			
 			/**
 			 * \brief
 			 * \tparam PLAYPOD_CALLBACK
@@ -2212,6 +2225,7 @@ namespace playpod
 			 * \param pSize
 			 * \param pOffset
 			 */
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_in_app_purchase_pack(const PLAYPOD_CALLBACK& pCallBack,
 				const int& pGameId = -1,
@@ -2249,6 +2263,7 @@ namespace playpod
 				async_request(URL_GET_IN_APP_PURCHASE_PACK, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_global_in_app_purchase_pack(const PLAYPOD_CALLBACK& pCallback, const int& pItemId, const int &pSize = 10, const int& pOffset = 0)
 			{
@@ -2267,6 +2282,7 @@ namespace playpod
 				async_request(URL_GET_GLOBAL_IN_APP_PURCHASE_PACK, _parameters.c_str(), pCallback);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_game_items(const PLAYPOD_CALLBACK& pCallback, const int& pGameId, const int& pItemId = -1, const int& pSize = 10, const int& pOffset = 0)
 			{
@@ -2288,6 +2304,7 @@ namespace playpod
 				async_request(URL_GET_GAME_ITEMS, _parameters.c_str(), pCallback);
 			}
 
+			//TODO: test later
 			template<typename PLAYPOD_CALLBACK>
 			static void get_user_game_center_item(const PLAYPOD_CALLBACK& pCallback, const int& pItemId = -1, const int& pSize = 10, const int& pOffset = 0)
 			{
@@ -2307,6 +2324,7 @@ namespace playpod
 				async_request(URL_GET_USER_GC_ITEMS, _parameters.c_str(), pCallback);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_user_items(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pItemId = -1, const int& pSize = 10, const int& pOffset = 0)
 			{
@@ -2328,6 +2346,7 @@ namespace playpod
 				async_request(URL_GET_USER_ITEMS, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename  PLAYPOD_CALLBACK>
 			static void consume_item_request(const PLAYPOD_CALLBACK& pCallBack, const int& pItemId, const int& pCount)
 			{
@@ -2344,6 +2363,7 @@ namespace playpod
 				async_request(URL_CONSUME_ITEM, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: test later
 			template<typename  PLAYPOD_CALLBACK>
 			static void follow_league_request(const PLAYPOD_CALLBACK& pCallBack, const int& pBusinessId, const int& pPostId, const bool& pState = true)
 			{
@@ -2362,6 +2382,7 @@ namespace playpod
 				async_request(URL_FOLLOW_LEAGUE, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_league_top_players(const PLAYPOD_CALLBACK& pCallBack, const int& pLeagueId = -1, const int& pSize = 50, const int& pOffset = 0)
 			{
@@ -2381,6 +2402,7 @@ namespace playpod
 				async_request(URL_GET_LEAGUE_TOP_PLAYERS, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_time_line(const PLAYPOD_CALLBACK& pCallBack, const int& pUserId = -1, const int& pSize = 20, const int& pOffset = 0)
 			{
@@ -2400,6 +2422,7 @@ namespace playpod
 				async_request(URL_GET_TIME_LINE, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_league_following(const PLAYPOD_CALLBACK& pCallBack, const int& pSize = 10, const int& pOffset = 0)
 			{
@@ -2416,6 +2439,7 @@ namespace playpod
 				async_request(URL_GET_LEAGUE_FOLLOWING, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_enrolled_leagues(const PLAYPOD_CALLBACK& pCallBack, const int& pUserId = -1, const int& pSize = 20, const int& pOffset = 0)
 			{
@@ -2435,6 +2459,7 @@ namespace playpod
 				async_request(URL_GET_ENROLLED_LEAGUES, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: test later
 			template<typename PLAYPOD_CALLBACK>
 			static void get_custom_post(const PLAYPOD_CALLBACK& pCallBack, const int& pBusinessId, const int pId = -1, const JSONObject* pJsonObject = nullptr)
 			{
@@ -2461,6 +2486,7 @@ namespace playpod
 
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_enroll_access(const PLAYPOD_CALLBACK& pCallBack, const int& pBusinessId)
 			{
@@ -2475,6 +2501,7 @@ namespace playpod
 				async_request(URL_GET_LEAGUE_ENROLL_ACCESS, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void send_league_rate_request(const PLAYPOD_CALLBACK& pCallBack, const int& pLeagueId, const int& pRate)
 			{
@@ -2491,6 +2518,7 @@ namespace playpod
 				async_request(URL_LEAGUE_RATE, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_credit_pack_list(const PLAYPOD_CALLBACK& pCallBack, const int& pSize = 20, const int& pOffset = 0, const int64_t& pFromAmount = -1, const std::string &pName = "")
 			{
@@ -2513,6 +2541,7 @@ namespace playpod
 				async_request(URL_GET_CREDIT_PACK_LIST, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_league_matches_result(
 				const PLAYPOD_CALLBACK& pCallBack,
@@ -2543,6 +2572,7 @@ namespace playpod
 				async_request(URL_LEAGUE_MATCHES_RESULT, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: not tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_league_latest_matches_result(const PLAYPOD_CALLBACK& pCallBack, const int& pLeagueId, const std::string& pUsername = "", const int& pSize = 20, const int& pOffset = 0)
 			{
@@ -2564,6 +2594,7 @@ namespace playpod
 				async_request(URL_LEAGUE_LATEST_MATCHES_RESULT, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: not tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_league_latest_matches(
 				const PLAYPOD_CALLBACK& pCallBack,
@@ -2590,6 +2621,7 @@ namespace playpod
 				async_request(URL_LEAGUE_LATEST_MATCHES_RESULT, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: not tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_league_matches(const PLAYPOD_CALLBACK& pCallBack, const int& pLeagueId = -1, const std::string& pStatus = "", const int& pSize = 20, const int& pOffset = 0)
 			{
@@ -2612,6 +2644,7 @@ namespace playpod
 				async_request(URL_LEAGUE_MATCHES, _parameters.c_str(), pCallBack);
 			}
 
+			//TODO: not tested
 			template<typename PLAYPOD_CALLBACK>
 			static void add_league_comment_request(const PLAYPOD_CALLBACK& pCallBack, const int& pId, const std::string& pText)
 			{
@@ -2628,12 +2661,14 @@ namespace playpod
 				async_request(URL_ADD_LEAGUE_COMMENT, _parameters.c_str(), pCallBack);
 			}
 
+			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_game_center_status(const PLAYPOD_CALLBACK& pCallBack)
 			{
 				async_request(URL_GAME_CENTER_STATUS, "[]", pCallBack);
 			}
 
+			//TODO: not tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_lobbies_leagues(const PLAYPOD_CALLBACK& pCallBack, const std::vector<int>& pLobbyIds, const int& pType = -1, const int& pSize = 5, const int& pOffset = 0)
 			{
