@@ -35,12 +35,16 @@
 #include <w_logger.h>
 
 #define APP_ID					"GAME_CENTER_PC"
-#define SERVER_IP				"176.221.69.209:1036"
 #define SERVER_NAME             "bg.game.msg"
+#define SERVICE_URL				"https://service-play.pod.land/srv/serviceApi"
+#define GET_CONFIG_URL          "https://service-play.pod.land/srv/serviceApi/getConfig"
 #define MAX_MESSAGE_SIZE        2048
-#define ASYNC_SERVER_NAME       "sandbox.pod.land"
-#define ASYNC_SERVER_PORT       "8002"
-#define HTTP_PORT				"8003"
+#define ASYNC_SERVER_ADDRESS    "https://playpod-bus.pod.land"
+#define ASYNC_SERVER_PORT		"80"
+
+#define PANEL_URL				"https://play.pod.land/panel/"
+#define EDIT_PROFILE_URL		"https://panel.pod.land/Users/Info"
+#define OUATH_URL				"https://accounts.pod.land/oauth2/authorize/index.html?client_id=16807y864b4ab6a05a80d602f5b6d7&response_type=code&redirect_uri=https://service-play.pod.land:443/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile"
 
 //services
 #define PING									"user/ping"
@@ -622,7 +626,7 @@ namespace playpod
 				//get config
 				std::string _result;
 				if (_url->request_url(
-					("http://" + std::string(SERVER_IP) + "/srv/serviceApi/getConfig").c_str(),
+					std::string(SERVICE_URL) + "/getConfig",
 					_result) == W_FAILED)
 				{
 					return W_FAILED;
@@ -637,10 +641,10 @@ namespace playpod
 					_json.release();
 
 					JSONObject _result_json;
-					if(!_json.get_object("Result", _result_json))
+					if (!_json.get_object("Result", _result_json))
 					{
-						JSONObject _config_json;	
-						
+						JSONObject _config_json;
+
 						if (!_result_json.get_object("config", _config_json))
 						{
 							_config_json.get_value("harfs", config::harfs);
@@ -668,7 +672,7 @@ namespace playpod
 					if (config::harfs)
 					{
 						_result.clear();
-						std::string _http_request = ("http://" + std::string(ASYNC_SERVER_NAME) + ":" + HTTP_PORT +
+						std::string _http_request = (std::string(ASYNC_SERVER_ADDRESS) +
 							"/register/?action=register&deviceId=" + "40d1448b-d0dd-41ba-f450-168c4c0bf98d" + "&appId=" + APP_ID);
 
 						if (_url->request_url(_http_request.c_str(), _result) == W_FAILED)
@@ -739,7 +743,7 @@ namespace playpod
 
 									if (_type != 2)
 									{
-										sprintf(s_last_error_code, "could not register device to server %s", SERVER_IP);
+										sprintf(s_last_error_code, "could not register device to server %s", ASYNC_SERVER_ADDRESS);
 										return;
 									}
 
@@ -748,7 +752,7 @@ namespace playpod
 									JSONObject _content_jo;
 									if (_content_jo.from_string(_content_str))
 									{
-										sprintf(s_last_error_code, "could not parse content type %s", SERVER_IP);
+										sprintf(s_last_error_code, "could not parse content type %s", ASYNC_SERVER_ADDRESS);
 										return;
 									}
 									_content_jo.get_value("token", _peer_id);
@@ -807,7 +811,7 @@ namespace playpod
 				try
 				{
 					tcp::resolver _resolver(pIO);
-					tcp::resolver::query _query(ASYNC_SERVER_NAME, ASYNC_SERVER_PORT);
+					tcp::resolver::query _query(ASYNC_SERVER_ADDRESS, ASYNC_SERVER_PORT);
 					tcp::resolver::iterator _iter = _resolver.resolve(_query);
 					tcp::endpoint _endpoint = _iter->endpoint();
 					_socket->connect(_endpoint);
@@ -815,7 +819,7 @@ namespace playpod
 				catch (...)
 				{
 					_is_socket_avaiable = false;
-					sprintf(s_last_error_code, "could connect to async server %s:%s", ASYNC_SERVER_NAME, ASYNC_SERVER_PORT);
+					sprintf(s_last_error_code, "could connect to async server %s:%s", ASYNC_SERVER_ADDRESS, ASYNC_SERVER_PORT);
 				}
 
 				if (!_is_socket_avaiable)
@@ -983,7 +987,7 @@ namespace playpod
 					//send using http rest post
 					std::string _result;
 
-					const std::string _post_url = ("http://" + std::string(ASYNC_SERVER_NAME) + ":" + HTTP_PORT + "/srv/");
+					const std::string _post_url = (std::string(ASYNC_SERVER_ADDRESS) + "/srv/");
 					const std::string _msg = "data=" + std::string(pMessage) + std::string("&peerId=") + std::to_string(Network::_peer_id);
 					auto _hr = _url->send_rest_post(_post_url.c_str(), _msg.c_str(), _msg.size(), _result);
 					if (_hr == W_PASSED && !_result.empty())
@@ -1147,7 +1151,7 @@ namespace playpod
 
 				auto _num = 0, _mul = 1;
 
-				while (!pStr.empty()) 
+				while (!pStr.empty())
 				{
 					const auto _c = pStr.back();
 					_num += _mul * int(_c - '0');
@@ -1205,7 +1209,7 @@ namespace playpod
 						int _cur;
 						sscanf(_last.c_str(), "%d", &_cur);
 						_ret.push_back(_cur);
-						
+
 						_last.clear();
 
 						continue;
@@ -1224,13 +1228,13 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_stream_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pOffset = -1, const int& pSize = -1)
+			static void get_games_info(const PLAYPOD_CALLBACK& pCallBack, const int& pInfrustructure, const int& pOffset = -1, const int& pSize = -1)
 			{
 				std::string _parameters = "[";
 
 				auto _has_prev = false;
 
-				add_object_to_params("infrustructure", std::to_string(2).c_str(), _parameters, _has_prev);
+				add_object_to_params("infrustructure", std::to_string(pInfrustructure).c_str(), _parameters, _has_prev);
 
 				if (pSize >= 0)
 					add_object_to_params("size", std::to_string(pSize).c_str(), _parameters, _has_prev);
@@ -1740,12 +1744,12 @@ namespace playpod
 				async_request(URL_FRIENDSHIP_REQUEST, _parameters.c_str(), pCallBack);
 			}
 
-			
+
 			/**
-			 * \brief 
-			 * \tparam PLAYPOD_CALLBACK 
-			 * \param pCallBack 
-			 * \param pRequestId 
+			 * \brief
+			 * \tparam PLAYPOD_CALLBACK
+			 * \param pCallBack
+			 * \param pRequestId
 			 * \param pReply (1:accept	2:deny	3:deny and block)
 			*/
 			//tested
@@ -2213,7 +2217,7 @@ namespace playpod
 			}
 
 
-			
+
 			/**
 			 * \brief
 			 * \tparam PLAYPOD_CALLBACK
@@ -2225,7 +2229,7 @@ namespace playpod
 			 * \param pSize
 			 * \param pOffset
 			 */
-			//tested
+			 //tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_in_app_purchase_pack(const PLAYPOD_CALLBACK& pCallBack,
 				const int& pGameId = -1,
@@ -2696,6 +2700,7 @@ namespace playpod
 				const char* pParamsData,
 				const PLAYPOD_CALLBACK& pCallBack)
 			{
+				//TODO: function returns string -> prepare string request.
 
 				//auto _token_str = Network::_token.empty() ? "null" : Network::_token;
 				auto _token_str = Network::_token.empty() ? "null" : Network::_token;
@@ -2718,18 +2723,16 @@ namespace playpod
 				auto _message_vo = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_message_vo,
 					"{\\\"content\\\": \\\"%s\\\","
-					"\\\"messageId\\\":%d,"
 					"\\\"priority\\\": \\\"%s\\\","
 					"\\\"peerName\\\": \\\"%s\\\","
 					"\\\"ttl\\\": %d}",
-					_gc_param_data, 1001, "1", config::ahrrn, 0);
+					_gc_param_data, "1", config::ahrrn, 20000);
 
 				auto _async_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_async_data,
 					"{\"content\": \"%s\","
-					"\"trackerId\":%d,"
 					"\"type\": %d}",
-					_message_vo, 1001, 3);
+					_message_vo, 3);
 
 				Network::send_async(_async_data, strlen(_async_data), pCallBack);
 

@@ -20,7 +20,7 @@ std::function<void(void)> playpod::sdk::on_services_ready_callback = nullptr;
 
 #pragma region config
 
-const char* config::ssoiau = ("http://" + std::string(SERVER_IP) + "/pages/iap/buy/default.aspx").c_str();
+const char* config::ssoiau = (std::string(SERVICE_URL) + "/pages/iap/buy/default.aspx").c_str();
 //use http instead of tcp or web socket
 bool        config::harfs = false;
 //use encryption
@@ -28,7 +28,7 @@ bool        config::ure = false;
 //use tcp or websocket connection
 bool        config::utc = true;
 //peer name
-const char*	config::ahrrn = "bp.gc.sandbox";
+const char*	config::ahrrn = "playpod.service";
 //business id
 int	config::business_id = 692;
 //pc dl link
