@@ -28,7 +28,13 @@ bool        config::ure = false;
 //use tcp or websocket connection
 bool        config::utc = true;
 //peer name
+
+#ifdef TEST_SERVER
+const char*	config::ahrrn = "bp.gc.sandbox";
+#else
 const char*	config::ahrrn = "playpod.service";
+#endif
+
 //business id
 int	config::business_id = 692;
 //pc dl link
