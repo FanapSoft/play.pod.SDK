@@ -36,15 +36,27 @@
 
 #define APP_ID					"GAME_CENTER_PC"
 #define SERVER_NAME             "bg.game.msg"
-#define SERVICE_URL				"https://service-play.pod.land/srv/serviceApi"
-#define GET_CONFIG_URL          "https://service-play.pod.land/srv/serviceApi/getConfig"
-#define MAX_MESSAGE_SIZE        2048
-#define ASYNC_SERVER_ADDRESS    "https://playpod-bus.pod.land"
-#define ASYNC_SERVER_PORT		"80"
 
-#define PANEL_URL				"https://play.pod.land/panel/"
-#define EDIT_PROFILE_URL		"https://panel.pod.land/Users/Info"
-#define OUATH_URL				"https://accounts.pod.land/oauth2/authorize/index.html?client_id=16807y864b4ab6a05a80d602f5b6d7&response_type=code&redirect_uri=https://service-play.pod.land:443/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile"
+
+#ifdef TEST_SERVER
+	#define SERVICE_URL				"http://176.221.69.209:1036/srv/serviceApi"
+	#define ASYNC_SERVER_ADDRESS	"http://sandbox.pod.land:8003"
+	#define ASYNC_SERVER_PORT		"8002"
+
+	#define PANEL_URL				"http://test.playpod.ir/panel"
+	#define EDIT_PROFILE_URL		"http://sandbox.pod.land:1031/users/info/edit"
+	#define OUATH_URL				"https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile"
+#else
+	#define SERVICE_URL				"https://service-play.pod.land/srv/serviceApi"
+	#define ASYNC_SERVER_ADDRESS    "https://playpod-bus.pod.land"
+	#define ASYNC_SERVER_PORT		"80"
+
+	#define PANEL_URL				"https://play.pod.land/panel/"
+	#define EDIT_PROFILE_URL		"https://panel.pod.land/Users/Info"
+	#define OUATH_URL				"https://accounts.pod.land/oauth2/authorize/index.html?client_id=16807y864b4ab6a05a80d602f5b6d7&response_type=code&redirect_uri=https://service-play.pod.land:443/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile"
+#endif
+
+#define MAX_MESSAGE_SIZE        2048
 
 //services
 #define PING									"user/ping"
@@ -2705,6 +2717,39 @@ namespace playpod
 				//auto _token_str = Network::_token.empty() ? "null" : Network::_token;
 				auto _token_str = Network::_token.empty() ? "null" : Network::_token;
 				//TODO: get time for client_meesage_id
+
+#ifdef TEST_SERVER
+				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
+				sprintf(_gc_param_data,
+					"{\\\\\\\"remoteAddr\\\\\\\": null,"
+					"\\\\\\\"clientMessageId\\\\\\\":\\\\\\\"%s\\\\\\\","
+					"\\\\\\\"serverKey\\\\\\\": %d,"
+					"\\\\\\\"oneTimeToken\\\\\\\": null,"
+					"\\\\\\\"token\\\\\\\": \\\\\\\"%s\\\\\\\","
+					"\\\\\\\"tokenIssuer\\\\\\\": %d,"
+					"\\\\\\\"parameters\\\\\\\": %s,"
+					"\\\\\\\"msgType\\\\\\\": %d,"
+					"\\\\\\\"uri\\\\\\\": \\\\\\\"%s\\\\\\\","
+					"\\\\\\\"messageId\\\\\\\": %d,"
+					"\\\\\\\"expireTime\\\\\\\": %d}",
+					"123e4567-e89b-12d3-b486-426655440000_GC_PC", 0, _token_str.c_str(), 0, pParamsData, 3, pUrlData, 1001, 0);
+
+				auto _message_vo = (char*)malloc(MAX_MESSAGE_SIZE);
+				sprintf(_message_vo,
+					"{\\\"content\\\": \\\"%s\\\","
+					"\\\"messageId\\\":%d,"
+					"\\\"priority\\\": \\\"%s\\\","
+					"\\\"peerName\\\": \\\"%s\\\","
+					"\\\"ttl\\\": %d}",
+					_gc_param_data, 1001, "1", config::ahrrn, 0);
+
+				auto _async_data = (char*)malloc(MAX_MESSAGE_SIZE);
+				sprintf(_async_data,
+					"{\"content\": \"%s\","
+					"\"trackerId\":%d,"
+					"\"type\": %d}",
+					_message_vo, 1001, 3);
+#else
 				auto _gc_param_data = (char*)malloc(MAX_MESSAGE_SIZE);
 				sprintf(_gc_param_data,
 					"{\\\\\\\"remoteAddr\\\\\\\": null,"
@@ -2733,6 +2778,7 @@ namespace playpod
 					"{\"content\": \"%s\","
 					"\"type\": %d}",
 					_message_vo, 3);
+#endif
 
 				Network::send_async(_async_data, strlen(_async_data), pCallBack);
 
