@@ -61,6 +61,7 @@
 //services
 #define PING									"user/ping"
 
+#define URL_PING								"/srv/user/ping"
 #define URL_GAME_INFO							"/srv/game/get"
 #define URL_GET_LOBBIES							"/srv/lobby/get"
 #define URL_GET_TOP_GAME						"/srv/game/top"
@@ -174,6 +175,8 @@ namespace playpod
 			static std::string palvcl;
 			//pc version
 			static std::string palv;
+			//force update
+			static bool palvfu;
 		};
 
 		struct JSONObject
@@ -635,11 +638,13 @@ namespace playpod
 				_url = new (std::nothrow) wolf::system::w_url();
 				if (!_url) return W_FAILED;
 
+				auto _abort_nums = w_point{ 100, 10 };
+
 				//get config
 				std::string _result;
 				if (_url->request_url(
 					std::string(SERVICE_URL) + "/getConfig",
-					_result) == W_FAILED)
+					_result, _abort_nums) == W_FAILED)
 				{
 					return W_FAILED;
 				}
@@ -665,6 +670,7 @@ namespace playpod
 							_config_json.get_value("palvdl", config::palvdl);
 							_config_json.get_value("palvcl", config::palvcl);
 							_config_json.get_value("palv", config::palv);
+							_config_json.get_value("palvfu", config::palvfu);
 						}
 						else
 						{
@@ -687,7 +693,7 @@ namespace playpod
 						std::string _http_request = (std::string(ASYNC_SERVER_ADDRESS) +
 							"/register/?action=register&deviceId=" + "40d1448b-d0dd-41ba-f450-168c4c0bf98d" + "&appId=" + APP_ID);
 
-						if (_url->request_url(_http_request.c_str(), _result) == W_FAILED)
+						if (_url->request_url(_http_request.c_str(), _result, _abort_nums) == W_FAILED)
 						{
 							return W_FAILED;
 						}
@@ -1042,7 +1048,8 @@ namespace playpod
 
 			static W_RESULT request_url(const char* pURL, std::string& pResult)
 			{
-				return _url ? _url->request_url(pURL, pResult) : W_FAILED;
+				auto _abort_nums = w_point{ 100, 10 };
+				return _url ? _url->request_url(pURL, pResult, _abort_nums) : W_FAILED;
 			}
 
 			static void ping()
@@ -1237,6 +1244,14 @@ namespace playpod
 				}
 
 				return _ret;
+			}
+
+			template<typename PLAYPOD_CALLBACK>
+			static void ping(const PLAYPOD_CALLBACK& pCallBack)
+			{
+				std::string _parameters = "[]";
+
+				async_request(URL_PING, _parameters.c_str(), pCallBack);
 			}
 
 			template<typename PLAYPOD_CALLBACK>

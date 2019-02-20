@@ -43,6 +43,8 @@ std::string config::palvdl;
 std::string config::palvcl;
 //pc version
 std::string config::palv;
+//force update
+bool config::palvfu;
 
 #pragma endregion
 
