@@ -43,6 +43,8 @@ std::string config::palvdl;
 std::string config::palvcl;
 //pc version
 std::string config::palv;
+//pc min version
+std::string config::pamv;
 //force update
 bool config::palvfu;
 

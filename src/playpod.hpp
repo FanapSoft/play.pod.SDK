@@ -175,6 +175,8 @@ namespace playpod
 			static std::string palvcl;
 			//pc version
 			static std::string palv;
+			//pc min version
+			static std::string config::pamv;
 			//force update
 			static bool palvfu;
 		};
@@ -670,6 +672,7 @@ namespace playpod
 							_config_json.get_value("palvdl", config::palvdl);
 							_config_json.get_value("palvcl", config::palvcl);
 							_config_json.get_value("palv", config::palv);
+							_config_json.get_value("pamv", config::pamv);
 							_config_json.get_value("palvfu", config::palvfu);
 						}
 						else
