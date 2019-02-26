@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "request": "*",
+    "form-data": "*",
+    "ws": "*"
+  },
+  "scripts": { "start": "node server.js" }
+}
