@@ -37,8 +37,8 @@
 #define APP_ID					"GAME_CENTER_PC"
 #define SERVER_NAME             "bg.game.msg"
 
-
 #ifdef TEST_SERVER
+	#define SERVER_URL				"https://176.221.69.209:1036"
 	#define SERVICE_URL				"http://176.221.69.209:1036/srv/serviceApi"
 	#define ASYNC_SERVER_ADDRESS	"http://sandbox.pod.land:8003"
 	#define ASYNC_SERVER_PORT		"8002"
@@ -47,6 +47,7 @@
 	#define EDIT_PROFILE_URL		"http://sandbox.pod.land:1031/users/info/edit"
 	#define OUATH_URL				"https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile"
 #else
+	#define SERVER_URL				"https://service-play.pod.land/"
 	#define SERVICE_URL				"https://service-play.pod.land/srv/serviceApi"
 	#define ASYNC_SERVER_ADDRESS    "https://playpod-bus.pod.land"
 	#define ASYNC_SERVER_PORT		"80"
