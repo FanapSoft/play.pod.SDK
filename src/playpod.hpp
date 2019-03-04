@@ -1011,7 +1011,13 @@ namespace playpod
 
 					const std::string _post_url = (std::string(ASYNC_SERVER_ADDRESS) + "/srv/");
 					const std::string _msg = "data=" + std::string(pMessage) + std::string("&peerId=") + std::to_string(Network::_peer_id);
-					auto _hr = _url->send_rest_post(_post_url.c_str(), _msg.c_str(), _msg.size(), _result);
+					auto _abort_nums = w_point{ 100, 10 };
+					auto _hr = _url->send_rest_post(
+						_post_url.c_str(), 
+						_msg.c_str(),
+						_msg.size(), 
+						_result,
+						_abort_nums);
 					if (_hr == W_PASSED && !_result.empty())
 					{
 						JSONObject _json;
