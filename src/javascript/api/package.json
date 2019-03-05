@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "mongodb": "*",
+    "form-data": "*",
+    "request": "*",
+    "ws": "*"
+  }
+}

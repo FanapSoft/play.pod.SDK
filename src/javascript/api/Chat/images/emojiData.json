@@ -1,0 +1,21 @@
+{
+  "config": {
+    "defaultAddress": "",
+    "version" : "1.0.0"
+  },
+  "data": {
+    "EM_01": {
+      "version": "1.0.0",
+      "format": "RGBA8888",
+      "imageSize": {"width":296,"height":296},
+      "type" : 1
+    },
+    "EM_02": {
+      "version": "1.0.0",
+      "format": "RGBA8888",
+      "imageSize": {"width": 540, "height": 140},
+      "type" : 1
+    }
+  }
+}
+
