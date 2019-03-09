@@ -38,23 +38,23 @@
 #define SERVER_NAME             "bg.game.msg"
 
 #ifdef TEST_SERVER
-	#define SERVER_URL				"https://176.221.69.209:1036"
-	#define SERVICE_URL				"http://176.221.69.209:1036/srv/serviceApi"
-	#define ASYNC_SERVER_ADDRESS	"http://sandbox.pod.land:8003"
-	#define ASYNC_SERVER_PORT		"8002"
+#define SERVER_URL				"https://176.221.69.209:1036"
+#define SERVICE_URL				"http://176.221.69.209:1036/srv/serviceApi"
+#define ASYNC_SERVER_ADDRESS	"http://sandbox.pod.land:8003"
+#define ASYNC_SERVER_PORT		"8002"
 
-	#define PANEL_URL				"http://test.playpod.ir/panel"
-	#define EDIT_PROFILE_URL		"http://sandbox.pod.land:1031/users/info/edit"
-	#define OUATH_URL				"https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile"
+#define PANEL_URL				"http://test.playpod.ir/panel"
+#define EDIT_PROFILE_URL		"http://sandbox.pod.land:1031/users/info/edit"
+#define OUATH_URL				"https://accounts.pod.land/oauth2/authorize/index.html?client_id=39105edd466f819c057b3c937374&response_type=code&redirect_uri=http://176.221.69.209:1036/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile"
 #else
-	#define SERVER_URL				"https://service-play.pod.land/"
-	#define SERVICE_URL				"https://service-play.pod.land/srv/serviceApi"
-	#define ASYNC_SERVER_ADDRESS    "https://playpod-bus.pod.land"
-	#define ASYNC_SERVER_PORT		"80"
+#define SERVER_URL				"https://service-play.pod.land/"
+#define SERVICE_URL				"https://service-play.pod.land/srv/serviceApi"
+#define ASYNC_SERVER_ADDRESS    "https://playpod-bus.pod.land"
+#define ASYNC_SERVER_PORT		"80"
 
-	#define PANEL_URL				"https://play.pod.land/panel/"
-	#define EDIT_PROFILE_URL		"https://panel.pod.land/Users/Info"
-	#define OUATH_URL				"https://accounts.pod.land/oauth2/authorize/index.html?client_id=16807y864b4ab6a05a80d602f5b6d7&response_type=code&redirect_uri=https://service-play.pod.land:443/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile"
+#define PANEL_URL				"https://play.pod.land/panel/"
+#define EDIT_PROFILE_URL		"https://panel.pod.land/Users/Info"
+#define OUATH_URL				"https://accounts.pod.land/oauth2/authorize/index.html?client_id=16807y864b4ab6a05a80d602f5b6d7&response_type=code&redirect_uri=https://service-play.pod.land:443/Pages/Auth/SSOCallback/Default.aspx&scope=phone%20profile"
 #endif
 
 #define MAX_MESSAGE_SIZE        2048
@@ -222,6 +222,9 @@ namespace playpod
 				}
 				this->_writer = new rapidjson::Writer<rapidjson::StringBuffer>(this->_write_buffer);
 				_document.Accept(*this->_writer);
+
+				if (!_document.IsObject()) return 1;
+
 				return 0;
 			}
 
@@ -1013,9 +1016,9 @@ namespace playpod
 					const std::string _msg = "data=" + std::string(pMessage) + std::string("&peerId=") + std::to_string(Network::_peer_id);
 					auto _abort_nums = w_point{ 100, 10 };
 					auto _hr = _url->send_rest_post(
-						_post_url.c_str(), 
-						_msg.c_str(),
-						_msg.size(), 
+						_post_url,
+						_msg,
+						_msg.size(),
 						_result,
 						_abort_nums);
 					if (_hr == W_PASSED && !_result.empty())
@@ -1366,7 +1369,7 @@ namespace playpod
 			}
 
 			template<typename PLAYPOD_CALLBACK>
-			static void get_top_players(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pOffset = 0, const int& pSize = 50)
+			static void get_top_players(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId = -1, const int& pLeagueId = -1, const int& pOffset = 0, const int& pSize = 50)
 			{
 				std::string _parameters = "[";
 
@@ -1376,7 +1379,10 @@ namespace playpod
 
 				add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
 
-				add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
+				if (pGameId > 0)
+					add_object_to_params("gameId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
+				if (pLeagueId > 0)
+					add_object_to_params("leagueId", std::to_string(pGameId).c_str(), _parameters, _has_prev);
 
 				_parameters += "]";
 
@@ -2069,6 +2075,9 @@ namespace playpod
 			template<typename PLAYPOD_CALLBACK>
 			static void get_leagues_info(
 				const PLAYPOD_CALLBACK& pCallBack,
+				const bool pMine = false,
+				const bool pShowDefault = false,
+				const std::vector<int> pStatusList,
 				const int& pGameId = -1,
 				const int& pLobbyId = -1,
 				const std::vector<int>& pLeaguesId = std::vector<int>())
@@ -2085,6 +2094,18 @@ namespace playpod
 
 				if (pLeaguesId.size() >= 0)
 					add_object_to_params("leaguesId", cast_vector_to_json_array(pLeaguesId).c_str(), _parameters, _has_prev);
+
+				add_object_to_params("mine", (pMine) ? "true" : "false", _parameters, _has_prev);
+				add_object_to_params("showDefault", (pMine) ? "true" : "false", _parameters, _has_prev);
+
+				std::string _status_list_str = "\\\\\\\"[";
+
+				for(auto i = 0; i < pStatusList.size(); ++i)
+				{
+					_status_list_str += (i < pStatusList.size() - 1) ? std::to_string(pStatusList[i]) + "," : std::to_string(pStatusList[i]);
+				}
+
+				_status_list_str += "\\\\\\\"";
 
 				_parameters += "]";
 
@@ -2724,7 +2745,11 @@ namespace playpod
 
 				add_object_to_params("offset", std::to_string(pOffset).c_str(), _parameters, _has_prev);
 
-				add_object_to_params("lobbyIds", cast_vector_to_json_array(pLobbyIds).c_str(), _parameters, _has_prev);
+				for (auto i = 0; i < pLobbyIds.size(); i++)
+				{
+					auto _lobby_id_string = "\\\\\\\"" + std::to_string(pLobbyIds[i]) + "\\\\\\\"";
+					add_object_to_params("lobbyIds", _lobby_id_string.c_str(), _parameters, _has_prev);
+				}
 
 				_parameters += "]";
 
