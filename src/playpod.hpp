@@ -177,7 +177,7 @@ namespace playpod
 			//pc version
 			static std::string palv;
 			//pc min version
-			static std::string config::pamv;
+			static std::string pamv;
 			//force update
 			static bool palvfu;
 		};
@@ -710,7 +710,7 @@ namespace playpod
 							JSONObject _json;
 							if (_json.from_string(_result))
 							{
-								sprintf(s_last_error_code, "could not register device via http request: %s", _http_request);
+								sprintf(s_last_error_code, "could not register device via http request: %s", _http_request.c_str());
 								return W_FAILED;
 							}
 
@@ -889,7 +889,7 @@ namespace playpod
 					{
 						sprintf(s_last_error_code,
 							"error on receiving data from socket. error code: %d, error message: %s\n",
-							pError.value(), pError.message());
+							pError.value(), pError.message().c_str());
 						return;
 					}
 
@@ -949,7 +949,7 @@ namespace playpod
 					{
 						sprintf(s_last_error_code,
 							"error on writing data to socket. error code: %d, error message: %s\n",
-							pError.value(), pError.message());
+							pError.value(), pError.message().c_str());
 						return;
 					}
 
@@ -963,7 +963,7 @@ namespace playpod
 						{
 							sprintf(s_last_error_code,
 								"error on reading lenght of data. error code: %d, error message: %s\n",
-								pError.value(), pError.message());
+								pError.value(), pError.message().c_str());
 						}
 						else
 						{
@@ -1039,7 +1039,7 @@ namespace playpod
 					else
 					{
 						sprintf(s_last_error_code,
-							"request %s with following params %s failed", _post_url, _msg);
+							"request %s with following params %s failed", _post_url.c_str(), _msg.c_str());
 					}
 				}
 				else
