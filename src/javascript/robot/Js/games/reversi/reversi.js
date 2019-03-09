@@ -789,7 +789,7 @@ function Game(options) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    var __brainMove = function () {
+    var __brainMove = function (params) {
 
         var player1ValidMove = getValidMoves(__board, __owner.tile);
 
@@ -799,7 +799,22 @@ function Game(options) {
         var data;
 
         try {
-            data = robotBraint.execute({board : __board,tile : __owner.tile});
+
+            var move;
+
+            if(params.move) {
+                move = {
+                    row: params.move.column,
+                    column : params.move.row
+                };
+            }
+            data = robotBraint.execute({
+                board : __board,
+                tile : __owner.tile,
+                move : move,
+                opponent : __opponent,
+                matchId : __matchId
+            });
 
             if(typeof data.column === "undefined" || typeof data.row === "undefined") {
                 throw  {};
@@ -822,12 +837,12 @@ function Game(options) {
         }
     };
 
-    var __autoMove = function () {
+    var __autoMove = function (params) {
 
         // __brainMove();
 
         setTimeout(function () {
-            __brainMove();
+            __brainMove(params);
         },Config.moveInterval);
 
     };
@@ -981,7 +996,9 @@ function Game(options) {
                             __prevTurn = __turn;
                             __turn = __playerOne.id;
                             __setTurn(__turn);
-                            __autoMove();
+                            __autoMove({
+                                move : __playerAction
+                            });
                         }
                     }
 
@@ -1024,7 +1041,9 @@ function Game(options) {
                             __prevTurn = __turn;
                             __turn = __playerTwo.id;
                             __setTurn(__turn);
-                            __autoMove();
+                            __autoMove({
+                                    move : __playerAction
+                                });
                         }
                     }
 
@@ -1094,7 +1113,7 @@ function Game(options) {
             if (data.cmd == "position") {
 
                 __self._setPlayerAction(data.playerId, data.position);
-                __autoMove();
+                __autoMove({move : data.position});
 
             }
             else if (data.cmd == "finish") {
@@ -1157,7 +1176,7 @@ function Game(options) {
     __self.onStart = function () {
         //console.log("onStart");
         if (__owner.applicant) {
-            __autoMove();
+            __autoMove({});
         }
 
         __gameState = true;

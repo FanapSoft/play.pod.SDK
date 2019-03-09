@@ -1,7 +1,7 @@
 const isDebug = true; // in debug mode quick match is off and just accept request from users that specified in acceptRequestFrom
 
 module.exports = {
-    token:  "bb047284c3384aa8b60be6752af08ea0",// get your token from https://play.pod.land
+    token:  "******************",// get your token from https://play.pod.land
     tokenIssuer: 0,
     games: [
         {

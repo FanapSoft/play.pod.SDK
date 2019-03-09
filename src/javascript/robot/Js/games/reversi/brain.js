@@ -166,11 +166,21 @@ function Brain() {
     *  ' ' = position is empty
     * params.tile  : your die , X or O
     *
+    * params.matchId
+    *
+    * params.move.row
+    * params.move.column
+    *
+    * params.opponent.id
+    * params.opponent.name
+    *
     * return { row : row index , column : column index}
     *
     * */
     this.execute = function (params) {
-        console.log(params.board, params.tile);
+        console.log("board",params.board);
+        console.log("move",params.move);
+        console.log("matchId",params.matchId);
         console.log('Current State ', getCurrentResult(params.board));
         return autoMove(params.board,params.tile);
     };
