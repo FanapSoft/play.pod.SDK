@@ -50,14 +50,28 @@ class User {
                 },
                 matchRequest: (content) => {
 
+                    if(content.gameId !== this._gameId) return;
+
                     console.log("RECEIVE_MATCH_REQUEST_1", JSON.stringify(content));
 
-                    if (this._options.debug && this._options.acceptRequestFrom.indexOf(content.id) !== -1) {
-                        content.res({
-                            state: true
-                        }, (result) => {
-                            console.log("RECEIVE_MATCH_REQUEST_2", result);
-                        });
+                    if (this._options.autoAcceptMatchRequest) {
+
+                        if(Array.isArray(this._options.acceptRequestFrom) && this._options.acceptRequestFrom.length>0) {
+                            if(this._options.acceptRequestFrom.indexOf(content.id) !== -1) {
+                                content.res({
+                                    state: true
+                                }, (result) => {
+                                    console.log("RECEIVE_MATCH_REQUEST_2", result);
+                                });
+                            }
+                        } else {
+                            content.res({
+                                state: true
+                            }, (result) => {
+                                console.log("RECEIVE_MATCH_REQUEST_2", result);
+                            });
+                        }
+
                     }
 
                 },
@@ -81,7 +95,7 @@ class User {
     }
 
     _quickMatchRequest() {
-        if (this._options.debug) return;
+        if (!this._options.quickMatch) return;
 
         let reqData = {};
         reqData["leagueId"] = this._options.leagueId;
