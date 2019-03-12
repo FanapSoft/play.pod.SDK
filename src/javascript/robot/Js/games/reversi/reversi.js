@@ -789,14 +789,23 @@ function Game(options) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    function randomMove(validMoves) {
+        var selectedIndex = generateRandomInt(0, validMoves.length - 1);
+
+        return {
+            column: validMoves[selectedIndex][1],
+            row: validMoves[selectedIndex][0]
+        }
+    }
+
     var __brainMove = function (params) {
 
-        var player1ValidMove = getValidMoves(__board, __owner.tile);
+        var validMoves = getValidMoves(__board, __owner.tile);
 
-        if(player1ValidMove.length === 0) {
+        if(validMoves.length === 0) {
             return;
         }
-        var data;
+
 
         try {
 
@@ -808,33 +817,34 @@ function Game(options) {
                     column : params.move.row
                 };
             }
-            data = robotBraint.execute({
+            robotBraint.execute({
                 board : __board,
                 tile : __owner.tile,
                 move : move,
                 opponent : __opponent,
                 matchId : __matchId
+            },function (data) {
+
+                if(typeof data.column === "undefined" || typeof data.row === "undefined") {
+                    data = randomMove(validMoves);
+                }
+
+                __self._setPlayerAction(__owner.id, {
+                    row : data.column,
+                    column : data.row,
+                });
             });
 
-            if(typeof data.column === "undefined" || typeof data.row === "undefined") {
-                throw  {};
-            }
+
         } catch (e){
-            var selectedIndex = generateRandomInt(0, player1ValidMove.length - 1);
-
-            data = {
-                column: player1ValidMove[selectedIndex][1],
-                row: player1ValidMove[selectedIndex][0]
-            }
-        }
-
-
-        if(data) {
+            console.log("EXECUTE EXCEPTION", e);
+            var data = randomMove(validMoves);
             __self._setPlayerAction(__owner.id, {
                 row : data.column,
                 column : data.row,
             });
         }
+
     };
 
     var __autoMove = function (params) {

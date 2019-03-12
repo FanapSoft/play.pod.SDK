@@ -1,7 +1,7 @@
 
 module.exports = {
-    token:  "***************************",// get your token from https://play.pod.land
-    tokenIssuer: 0,
+    token:  "***********************",// get your token from https://play.pod.land
+    tokenIssuer:0,
     games: [
         {
             id:"7533",
@@ -15,5 +15,6 @@ module.exports = {
     newMatchDelay : 3000, // quick match state timeout after current match finished
     quickMatch : false,
     autoAcceptMatchRequest : true,
+    maxConcurrentMatch : 2,
     acceptRequestFrom : [] //accept request from specified users, userId is string
 };

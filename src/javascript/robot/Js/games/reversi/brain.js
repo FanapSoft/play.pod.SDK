@@ -177,12 +177,13 @@ function Brain() {
     * return { row : row index , column : column index}
     *
     * */
-    this.execute = function (params) {
+    this.execute = function (params,callback) {
         console.log("board",params.board);
         console.log("move",params.move);
         console.log("matchId",params.matchId);
         console.log('Current State ', getCurrentResult(params.board));
-        return autoMove(params.board,params.tile);
+        var data =  autoMove(params.board,params.tile);
+        callback(data);
     };
 }
 

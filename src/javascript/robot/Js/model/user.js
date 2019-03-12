@@ -8,6 +8,7 @@ class User {
         this._gameId = null;
         this._service = null;
         this._options = options;
+        this._concurrentMatchCount = 0;
         this._games = {};
         let game;
 
@@ -49,10 +50,24 @@ class User {
                     this._quickMatchRequest();
                 },
                 matchRequest: (content) => {
+                    console.log("MATCH_REQUEST", JSON.stringify(content));
 
-                    if(content.gameId !== this._gameId) return;
+                    if(content.gameId !== this._gameId) {
+                        console.log("REQUESTED_GAME_NOT_VALID");
+                        return;
+                    }
 
-                    console.log("RECEIVE_MATCH_REQUEST_1", JSON.stringify(content));
+                    
+                    if(this._concurrentMatchCount>= options.maxConcurrentMatch) {
+                        console.log("CONCURRENT_MATCH_OVERFLOW");
+                        content.res({
+                            state: false
+                        }, (result) => {
+
+                        });
+                        return;
+                    }
+
 
                     if (this._options.autoAcceptMatchRequest) {
 
@@ -68,7 +83,7 @@ class User {
                             content.res({
                                 state: true
                             }, (result) => {
-                                console.log("RECEIVE_MATCH_REQUEST_2", result);
+                                console.log("RECEIVE_MATCH_RESPONSE", result);
                             });
                         }
 
@@ -77,6 +92,7 @@ class User {
                 },
                 matchResult: (data) => {
                     console.log("match finished");
+                    this._concurrentMatchCount -= 1;
 
                     setTimeout( () => {
                         this._quickMatchRequest();
@@ -84,6 +100,7 @@ class User {
 
                 },
                 newMatch: (matchData) => {
+                    this._concurrentMatchCount += 1;
                     console.log("new match", JSON.stringify(matchData));
                 },
                 matchStart: (matchData) => {

@@ -8,21 +8,13 @@ class RobotApp {
 
     constructor() {
 
-        new User({
-            token: Config.token,
-            tokenIssuer: Config.tokenIssuer,
-            serviceMode: Config.serviceMode,
-            games: Config.games,
-            leagueId: Config.leagueId,
-            quickMatch: Config.quickMatch,
-            acceptRequestFrom: Config.acceptRequestFrom,
-            newMatchDelay: Config.newMatchDelay,
-            autoAcceptMatchRequest: Config.autoAcceptMatchRequest,
-            socketReport: false,
-            chatSocketReport: false,
-            chatEnable : false,
-            parent: this
-        });
+        let param = JSON.parse(JSON.stringify(Config));
+        param.socketReport = false;
+        param.chatSocketReport = false;
+        param.chatEnable = false;
+        param.parent = this;
+
+        new User(param);
     };
 
 }
