@@ -62,7 +62,7 @@ bool											Network::_is_ready = false;
 // User Data 
 std::string										Network::_image;
 int												Network::_customer_id;
-std::string										Network::_name;
+std::string										Network::_user_name;
 int												Network::_user_id;
 std::string										Network::_token;
 std::string										Network::_profile_image;

@@ -556,6 +556,23 @@ namespace playpod
 				return 1;
 			}
 
+			int get_array_value(const unsigned int& pIndex, std::string& pString) const
+			{
+				if (_document.IsNull()) return 1;
+				if (_document.IsArray())
+				{
+					const auto _size = _document.End() - _document.Begin();
+					if (pIndex < _size)
+					{
+						if (!_document[pIndex].IsString())
+							return 1;
+						pString = _document[pIndex].GetString();
+						return 0;
+					}
+				}
+				return 1;
+			}
+
 			int get_array_size() const
 			{
 				if (_document.IsNull()) return 0;
@@ -1105,7 +1122,7 @@ namespace playpod
 
 			static std::string	_image;
 			static int			_customer_id;
-			static std::string	_name;
+			static std::string	_user_name;
 			static int			_user_id;
 			static std::string	_token;
 			static std::string	_profile_image;
@@ -1863,7 +1880,6 @@ namespace playpod
 				async_request(URL_REMOVE_FRIEND_REQUEST, _parameters.c_str(), pCallBack);
 			}
 
-			//tested
 			template<typename PLAYPOD_CALLBACK>
 			static void get_online_user(const PLAYPOD_CALLBACK& pCallBack, const int& pGameId, const int& pLeagueId, const int& pSize = 10, const int& pOffset = 0, const std::string& pFilter = "")
 			{
@@ -2077,7 +2093,7 @@ namespace playpod
 				const PLAYPOD_CALLBACK& pCallBack,
 				const bool pMine = false,
 				const bool pShowDefault = false,
-				const std::vector<int> pStatusList,
+				const std::vector<int> pStatusList = std::vector<int>(),
 				const int& pGameId = -1,
 				const int& pLobbyId = -1,
 				const std::vector<int>& pLeaguesId = std::vector<int>())
@@ -2100,7 +2116,7 @@ namespace playpod
 
 				std::string _status_list_str = "\\\\\\\"[";
 
-				for(auto i = 0; i < pStatusList.size(); ++i)
+				for (auto i = 0; i < pStatusList.size(); ++i)
 				{
 					_status_list_str += (i < pStatusList.size() - 1) ? std::to_string(pStatusList[i]) + "," : std::to_string(pStatusList[i]);
 				}
